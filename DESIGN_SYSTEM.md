@@ -27,8 +27,20 @@ An academic, calm, trustworthy aesthetic designed for Indian schools.
   - Small / Badges: 12px–13px
 
 ## 3. UI Components & Tokens
-- **Elevation / Shadows**: Very subtle (`shadow-sm`: `0 1px 2px 0 rgba(0, 0, 0, 0.05)`). No heavy drop-shadows.
-- **Borders**: 1px solid `#E4E8E2`, radius `rounded-lg` (8px) or `rounded-xl` (12px). No cartoonishly oversized pill buttons.
+- **Elevation / Shadows**:
+  - `shadow-card`: `0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04)`
+  - `shadow-cardHover`: `0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04)`
+  - `shadow-popover`: `0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04)`
+  - `shadow-floating`: `0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04)`
+- **Component Primitives**:
+  - `Card`, `CardHeader`, `CardContent`, `CardFooter`: Structured containers with subtle borders and hover states.
+  - `StatCard`: Standardized metric display with semantic icon backgrounds, trends, and secondary details.
+  - `MasteryBadge`: Color-coded pill with glowing status dot (`Mastered`, `Practicing`, `Needs Support`, `Not Started`).
+  - `StatusPill`: High-contrast pill for student status (`Needs Support`, `Advanced`, `On Track`) and intervention statuses (`Active`, `Completed`).
+  - `ProgressBar`: 6px/8px high-precision progress track with optional 85% mastery threshold marker.
+  - `Avatar`: Fallback monogram avatar with status indicator dot.
+  - `SearchInput`: Debounced search box with keyboard shortcuts and clear action.
+  - `Modal`: Accessible backdrop dialog with escape key dismissal.
 - **Iconography**: Lucide React icons exclusively with 1.75px stroke width. Never use emojis as interface icons.
 - **Visual Representations**: SVG-rendered fraction models (bar representations, circular fraction pies, grid models).
 

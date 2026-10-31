@@ -41,5 +41,5 @@
 ## 3. Deployment & Live Verification
 - [x] `npm run build` succeeds with zero TypeScript or PostCSS errors.
 - [x] Public live deployment active at: `https://pratikbisen.github.io/gatipath/`.
-- [x] Live JS bundle (`index-DQK_KRLX.js`) and CSS bundle (`index-BD6R0nk5.css`) verified HTTP 200 OK.
+- [x] Live JS bundle (`index-cWGmJsVe.js`) and CSS bundle (`index-Dy5qJzLm.css`) verified HTTP 200 OK.
 - [x] End-to-end user workflows tested on live site.
