@@ -1,22 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { db } from '../../lib/db';
-import { Card, CardHeader, CardContent } from '../../components/ui/Card';
-import { MasteryBadge } from '../../components/ui/MasteryBadge';
-import { StatusPill } from '../../components/ui/StatusPill';
-import { ProgressBar } from '../../components/ui/ProgressBar';
-import { Avatar } from '../../components/ui/Avatar';
-import { SearchInput } from '../../components/ui/SearchInput';
 import {
-  Users,
   Search,
   ArrowRight,
-  AlertTriangle,
-  CheckCircle2,
   ChevronRight,
-  PlusCircle,
-  Clock,
-  Sparkles
+  CheckCircle2,
+  AlertTriangle,
+  User,
+  SlidersHorizontal,
+  X
 } from 'lucide-react';
 
 export const StudentRoster: React.FC = () => {
@@ -39,16 +32,10 @@ export const StudentRoster: React.FC = () => {
     const isStruggling = avg < 55 || hasError;
     const isMastered = avg >= 75;
 
-    let statusKey = 'developing';
-    if (isStruggling) statusKey = 'needs_support';
-    else if (isMastered) statusKey = 'mastered';
-    else if (avg >= 65) statusKey = 'almost_mastered';
-
     return {
       student: s,
-      rollNumber: index + 1,
+      rollNumber: String(index + 1).padStart(2, '0'),
       avgMastery: avg,
-      statusKey,
       isStruggling,
       isMastered,
       attemptsCount: attempts.length,
@@ -59,196 +46,215 @@ export const StudentRoster: React.FC = () => {
   const strugglingCount = studentData.filter(s => s.isStruggling).length;
   const masteredCount = studentData.filter(s => s.isMastered).length;
 
-  const filtered = studentData.filter(item => {
-    const matchesSearch = item.student.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    if (!matchesSearch) return false;
+  const filteredStudents = studentData.filter(({ student, isStruggling, isMastered }) => {
+    const matchesSearch =
+      student.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (filterMode === 'struggling') return item.isStruggling;
-    if (filterMode === 'mastered') return item.isMastered;
+    if (!matchesSearch) return false;
+    if (filterMode === 'struggling') return isStruggling;
+    if (filterMode === 'mastered') return isMastered;
     return true;
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* 1. Folio Masthead */}
+      <section className="border-b border-[#E8E2D8] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-subtle text-primary text-[11px] font-semibold mb-2">
-            <Users className="w-3.5 h-3.5" />
-            <span>Class 7-B Roster</span>
+          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7A7265] mb-1.5">
+            <span>Scholar Ledger</span>
+            <span>·</span>
+            <span>Class 7-B Mathematics</span>
+            <span>·</span>
+            <span>10 Scholars Registered</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-charcoal tracking-tight">
-            Student Performance Roster
+          <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#1A1817]">
+            Individual Student Ledger
           </h1>
-          <p className="text-xs sm:text-sm text-charcoal-muted mt-1 leading-relaxed">
-            Monitor individual mastery, diagnose learning difficulties, and assign targeted teacher interventions.
+          <p className="text-sm sm:text-base text-[#5C5549] mt-2 max-w-2xl leading-relaxed">
+            Examine individual topic mastery, assessment readiness, and misconception records. Click any row to open the student's complete diagnostic dossier.
           </p>
         </div>
 
-        {/* Quick Search & Filter Toolbar */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search student or email..."
-            className="w-full sm:w-60"
-          />
+        {/* Search & Filter Toolbar */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-[#8C8377] absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 pr-8 py-2 text-xs rounded-lg border border-[#DCD5C9] bg-white text-[#1A1817] placeholder-[#9C958C] focus:outline-none focus:border-[#1A1817] w-full sm:w-56 transition-colors shadow-xs"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8C8377] hover:text-[#1A1817]"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
 
-          <div className="inline-flex rounded-lg border border-border bg-canvas-subtle p-0.5 text-xs">
+          {/* Filter Pills */}
+          <div className="inline-flex rounded-lg border border-[#DCD5C9] bg-[#F7F3EB] p-0.5 text-xs font-mono">
             <button
               onClick={() => setFilterMode('all')}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded transition-all ${
                 filterMode === 'all'
-                  ? 'bg-surface text-charcoal shadow-2xs'
-                  : 'text-charcoal-muted hover:text-charcoal'
+                  ? 'bg-white text-[#1A1817] font-bold shadow-xs'
+                  : 'text-[#6E675B] hover:text-[#1A1817]'
               }`}
             >
-              All ({students.length})
+              All ({studentData.length})
             </button>
             <button
               onClick={() => setFilterMode('struggling')}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded transition-all ${
                 filterMode === 'struggling'
-                  ? 'bg-rose-50 text-rose-800 border border-rose-200/60 shadow-2xs'
-                  : 'text-charcoal-muted hover:text-charcoal'
+                  ? 'bg-[#8C2828] text-white font-bold shadow-xs'
+                  : 'text-[#8C2828] hover:text-[#5C1616]'
               }`}
             >
-              <span>Needs Support</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+              Needs Attention ({strugglingCount})
             </button>
             <button
               onClick={() => setFilterMode('mastered')}
-              className={`px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded transition-all ${
                 filterMode === 'mastered'
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/60 shadow-2xs'
-                  : 'text-charcoal-muted hover:text-charcoal'
+                  ? 'bg-[#2D6A4F] text-white font-bold shadow-xs'
+                  : 'text-[#2D6A4F] hover:text-[#194030]'
               }`}
             >
-              <span>Advanced</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+              Advanced ({masteredCount})
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Student List / Table Card */}
-      <Card>
+      {/* 2. Refined Academic Ledger Table */}
+      <section className="bg-white rounded-xl border border-[#E0D8CC] shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[700px]">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-border bg-canvas-subtle/50 text-[11px] font-bold uppercase tracking-wider text-charcoal-muted">
-                <th className="py-3.5 px-5">Student Information</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4">Curriculum Mastery</th>
-                <th className="py-3.5 px-4">Topic Progress</th>
-                <th className="py-3.5 px-5 text-right">Actions</th>
+              <tr className="border-b border-[#E8E2D8] bg-[#FAF7F2] font-mono text-[10px] uppercase tracking-wider text-[#7A7265]">
+                <th className="py-3.5 px-4 font-semibold">Roll</th>
+                <th className="py-3.5 px-4 font-semibold">Scholar Identity</th>
+                <th className="py-3.5 px-4 font-semibold">Status</th>
+                <th className="py-3.5 px-3 font-semibold text-center">01 Concept</th>
+                <th className="py-3.5 px-3 font-semibold text-center">02 Like Frac</th>
+                <th className="py-3.5 px-3 font-semibold text-center">03 Unlike Frac</th>
+                <th className="py-3.5 px-3 font-semibold text-center">04 Mult/Div</th>
+                <th className="py-3.5 px-4 font-semibold text-right">Mastery</th>
+                <th className="py-3.5 px-4 font-semibold text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border text-xs">
-              {filtered.length === 0 ? (
+            <tbody className="divide-y divide-[#EFEAE2]">
+              {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-charcoal-muted">
-                    No students match the selected filter.
+                  <td colSpan={9} className="py-12 text-center text-[#7A7265] text-xs">
+                    No scholars found matching your search.
                   </td>
                 </tr>
               ) : (
-                filtered.map(({ student, rollNumber, avgMastery, statusKey, isStruggling, attemptsCount, progs }) => (
-                  <tr
-                    key={student.id}
-                    onClick={() => navigate(`/teacher/student/${student.id}`)}
-                    className="hover:bg-canvas-subtle/40 transition-colors cursor-pointer group"
-                  >
-                    {/* Student Info */}
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-3">
-                        <Avatar
-                          name={student.displayName}
-                          seed={student.avatarSeed}
-                          size="md"
-                          status={isStruggling ? 'attention' : 'none'}
-                        />
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-heading font-bold text-sm text-charcoal group-hover:text-primary transition-colors">
-                              {student.displayName}
-                            </span>
-                            <span className="text-[11px] text-charcoal-muted font-normal">
-                              · Roll #{rollNumber}
-                            </span>
-                          </div>
-                          <span className="text-[11px] text-charcoal-muted block">
-                            {student.email}
+                filteredStudents.map(({ student, rollNumber, avgMastery, isStruggling, isMastered, progs }) => {
+                  const getTopicScore = (seq: number) => {
+                    const p = progs.find(pr => pr.topicId === `topic-${seq}`);
+                    return p ? p.masteryScore : 0;
+                  };
+
+                  return (
+                    <tr
+                      key={student.id}
+                      onClick={() => navigate(`/teacher/student/${student.id}`)}
+                      className="hover:bg-[#FAF8F5] transition-colors cursor-pointer group"
+                    >
+                      {/* Roll */}
+                      <td className="py-4 px-4 font-mono text-xs text-[#8C8377] font-semibold">
+                        {rollNumber}
+                      </td>
+
+                      {/* Scholar Info */}
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <span className="w-7 h-7 rounded-full bg-[#1A1817] text-[#FAF7F2] font-editorial font-bold text-xs flex items-center justify-center shrink-0">
+                            {student.displayName.split(' ').map(n => n[0]).join('')}
                           </span>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Status Pill */}
-                    <td className="py-4 px-4 whitespace-nowrap">
-                      <StatusPill status={statusKey} size="sm" />
-                    </td>
-
-                    {/* Overall Mastery & Progress */}
-                    <td className="py-4 px-4 min-w-[140px]">
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center text-[11px]">
-                          <span className="font-semibold text-charcoal tabular-nums">{avgMastery}%</span>
-                          <span className="text-charcoal-muted">{attemptsCount} attempts</span>
-                        </div>
-                        <ProgressBar value={avgMastery} target={85} size="sm" />
-                      </div>
-                    </td>
-
-                    {/* Topic Progress Chips */}
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {topics.map(t => {
-                          const p = progs.find(item => item.topicId === t.id);
-                          const score = p ? p.masteryScore : 0;
-                          const isDone = p?.status === 'mastered';
-
-                          return (
-                            <div
-                              key={t.id}
-                              className={`px-2 py-0.5 rounded text-[11px] font-medium border flex items-center gap-1 ${
-                                isDone
-                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                  : score >= 50
-                                  ? 'bg-amber-50 text-amber-800 border-amber-200'
-                                  : 'bg-canvas text-charcoal-muted border-border'
-                              }`}
-                              title={`${t.title}: ${score}%`}
-                            >
-                              <span className="font-semibold text-[10px]">T{t.sequenceOrder}</span>
-                              <span className="tabular-nums font-bold">{score}%</span>
-                              {isDone && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
+                          <div>
+                            <div className="font-editorial text-sm font-bold text-[#1A1817] group-hover:text-[#1B4332] transition-colors">
+                              {student.displayName}
                             </div>
-                          );
-                        })}
-                      </div>
-                    </td>
+                            <div className="font-mono text-[10px] text-[#7A7265]">
+                              {student.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
 
-                    {/* Action Button */}
-                    <td className="py-4 px-5 text-right whitespace-nowrap">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/teacher/student/${student.id}`);
-                        }}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-surface hover:bg-primary hover:text-white hover:border-primary text-xs font-semibold text-charcoal transition-all shadow-2xs"
-                      >
-                        <span>Profile</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      {/* Status */}
+                      <td className="py-4 px-4">
+                        {isStruggling ? (
+                          <span className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-[#FEEBEB] text-[#8C2828]">
+                            Needs Attention
+                          </span>
+                        ) : isMastered ? (
+                          <span className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-[#E8F4EE] text-[#2D6A4F]">
+                            Advanced
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-[#F4EFE6] text-[#6E675B]">
+                            On Track
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Topic 1-4 Mini Indicators */}
+                      {[1, 2, 3, 4].map(seq => {
+                        const score = getTopicScore(seq);
+                        return (
+                          <td key={seq} className="py-4 px-3 text-center">
+                            <span
+                              className={`font-mono text-[11px] font-semibold px-1.5 py-0.5 rounded ${
+                                score >= 80
+                                  ? 'bg-[#E8F4EE] text-[#1B4332]'
+                                  : score >= 50
+                                  ? 'bg-[#FAF1E4] text-[#C57D36]'
+                                  : score > 0
+                                  ? 'bg-[#FEEBEB] text-[#8C2828]'
+                                  : 'text-[#A39B8F]'
+                              }`}
+                            >
+                              {score}%
+                            </span>
+                          </td>
+                        );
+                      })}
+
+                      {/* Overall Mastery */}
+                      <td className="py-4 px-4 text-right">
+                        <span className="font-mono font-bold text-sm text-[#1A1817]">
+                          {avgMastery}%
+                        </span>
+                      </td>
+
+                      {/* Action */}
+                      <td className="py-4 px-4 text-right">
+                        <span className="inline-flex items-center gap-1 text-xs font-mono font-semibold text-[#1B4332] group-hover:translate-x-0.5 transition-transform">
+                          <span>Dossier</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
-      </Card>
+      </section>
     </div>
   );
 };

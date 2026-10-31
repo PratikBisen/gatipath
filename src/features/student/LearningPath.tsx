@@ -1,17 +1,15 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { db } from '../../lib/db';
-import { Card } from '../../components/ui/Card';
-import { MasteryBadge } from '../../components/ui/MasteryBadge';
 import { checkPrerequisites } from '../../engine/prerequisites';
 import {
   Lock,
-  CheckCircle2,
+  Check,
   ArrowRight,
   BookOpen,
-  HelpCircle,
-  GitCommit,
+  ChevronRight,
+  Award,
   Sparkles
 } from 'lucide-react';
 
@@ -29,21 +27,26 @@ export const LearningPath: React.FC = () => {
   }, {} as Record<string, any>);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      <div>
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-subtle text-primary text-[11px] font-semibold mb-2">
-          <GitCommit className="w-3.5 h-3.5" />
-          <span>Curriculum Prerequisite Progression</span>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* 1. Folio Masthead */}
+      <section className="border-b border-[#E8E2D8] pb-6">
+        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7A7265] mb-1.5">
+          <span>Curriculum Architecture</span>
+          <span>·</span>
+          <span>Directed Acyclic Graph</span>
+          <span>·</span>
+          <span>Class 7 Fractions</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-charcoal tracking-tight">
-          Your Adaptive Learning Path
+        <h1 className="font-editorial text-3xl sm:text-4xl font-bold tracking-tight text-[#1A1817]">
+          Prerequisite Progression Journey
         </h1>
-        <p className="text-xs sm:text-sm text-charcoal-muted mt-1 leading-relaxed">
-          In mathematics, higher-level topics require solid prerequisite foundations. GatiPath unlocks each step as you demonstrate understanding.
+        <p className="text-sm sm:text-base text-[#5C5549] mt-2 leading-relaxed">
+          In mathematics, advanced topics depend strictly on conceptual foundations. GatiPath prevents cognitive overload by ensuring prerequisite mastery before unlocking later stages.
         </p>
-      </div>
+      </section>
 
-      <div className="space-y-6 relative before:absolute before:inset-0 before:left-5 sm:before:left-6 before:w-0.5 before:bg-border before:-z-0">
+      {/* 2. Prerequisite Progression Chain */}
+      <div className="space-y-6 relative before:absolute before:inset-0 before:left-5 sm:before:left-6 before:w-0.5 before:bg-[#E2DBD0] before:z-0">
         {topics.map((topic, index) => {
           const prog = progressMap[topic.id];
           const score = prog ? prog.masteryScore : 0;
@@ -52,97 +55,88 @@ export const LearningPath: React.FC = () => {
           const isLocked = !prereqCheck.isSatisfied && score === 0;
 
           return (
-            <div key={topic.id} className="relative flex items-start gap-4 sm:gap-5 z-10">
-              {/* Stepper Node Circle */}
+            <div key={topic.id} className="relative flex items-start gap-4 sm:gap-6 z-10">
+              {/* Node indicator */}
               <div
-                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-heading font-bold text-sm shrink-0 border-2 transition-all shadow-2xs ${
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-mono font-bold text-sm shrink-0 border-2 transition-all ${
                   isMastered
-                    ? 'bg-primary border-primary text-white'
+                    ? 'bg-[#1B4332] border-[#1B4332] text-white'
                     : isLocked
-                    ? 'bg-canvas-subtle border-border text-charcoal-muted'
-                    : 'bg-surface border-primary text-primary'
+                    ? 'bg-[#EFEAE2] border-[#DCD5C9] text-[#8C8377]'
+                    : 'bg-white border-[#1B4332] text-[#1B4332]'
                 }`}
               >
                 {isMastered ? (
-                  <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <Check className="w-5 h-5" />
                 ) : isLocked ? (
-                  <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-charcoal-muted" />
+                  <Lock className="w-4 h-4" />
                 ) : (
-                  <span>{index + 1}</span>
+                  <span>0{topic.sequenceOrder}</span>
                 )}
               </div>
 
-              {/* Card Content */}
-              <Card
-                className={`flex-1 p-5 transition-all ${
-                  isLocked ? 'opacity-70 bg-canvas-subtle/30' : 'hover:border-primary/40'
+              {/* Topic Node Card */}
+              <div
+                className={`flex-1 rounded-xl border p-5 sm:p-6 transition-all ${
+                  isMastered
+                    ? 'bg-white border-[#E0D8CC] shadow-xs'
+                    : isLocked
+                    ? 'bg-[#FAF8F5] border-[#E8E2D8] opacity-75'
+                    : 'bg-white border-[#1B4332]/40 shadow-xs ring-1 ring-[#1B4332]/10'
                 }`}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-charcoal-muted">
-                      Topic {index + 1}
-                    </span>
-                    <span className="text-xs text-charcoal-muted">·</span>
-                    <span className="text-xs font-medium text-charcoal-muted">
-                      Est. {topic.estimatedMinutes} mins
-                    </span>
-                  </div>
-                  <MasteryBadge score={score} size="xs" />
-                </div>
-
-                <h3 className="text-base font-heading font-bold text-charcoal">
-                  {topic.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-charcoal-muted mt-1 leading-relaxed">
-                  {topic.description}
-                </p>
-
-                {/* Key Concepts Grid */}
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                  {topic.keyConcepts.map((concept, cIdx) => (
-                    <div key={cIdx} className="flex items-center gap-1.5 text-xs text-charcoal">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                      <span className="truncate">{concept}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Locked Prerequisite Alert */}
-                {isLocked && (
-                  <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
-                    <HelpCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold">Prerequisite Required: </span>
-                      {prereqCheck.missingPrerequisites.map((m) => (
-                        <span key={m.topicId}>
-                          Achieve at least {m.requiredMastery}% in {m.topicTitle} (current: {m.currentMastery}%) to unlock this topic.
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-xs uppercase text-[#8C8377] font-semibold">
+                        Module 0{topic.sequenceOrder}
+                      </span>
+                      <h3 className="font-editorial text-xl font-bold text-[#1A1817]">
+                        {topic.title}
+                      </h3>
+                      {isMastered && (
+                        <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-[#E8F4EE] text-[#1B4332]">
+                          Mastered (85%+)
                         </span>
-                      ))}
+                      )}
+                      {!isMastered && !isLocked && (
+                        <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-[#FAF1E4] text-[#C57D36]">
+                          {score}% Mastery
+                        </span>
+                      )}
                     </div>
-                  </div>
-                )}
 
-                {/* Actions */}
-                {!isLocked && (
-                  <div className="mt-4 pt-3 border-t border-border flex flex-wrap items-center gap-2.5">
-                    <button
-                      onClick={() => navigate(`/solve/${topic.id}`)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover transition-colors shadow-2xs"
-                    >
-                      <span>Adaptive Practice (Solve)</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => navigate(`/learn/${topic.id}`)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-canvas-subtle text-charcoal text-xs font-medium rounded-lg border border-border hover:bg-canvas transition-colors"
-                    >
-                      <BookOpen className="w-3.5 h-3.5 text-charcoal-muted" />
-                      <span>Learn Concept</span>
-                    </button>
+                    <p className="text-xs sm:text-sm text-[#5C5549] leading-relaxed">
+                      {topic.description}
+                    </p>
+
+                    {/* Prerequisite warning if locked */}
+                    {isLocked && prereqCheck.missingPrerequisites.length > 0 && (
+                      <div className="p-3 bg-[#FFF5F5] rounded-lg border border-[#FCD4D4] text-xs text-[#8C2828] font-mono mt-2">
+                        Prerequisite Required: Complete "{prereqCheck.missingPrerequisites[0]?.topicTitle}" to at least 40% mastery before advancing.
+                      </div>
+                    )}
                   </div>
-                )}
-              </Card>
+
+                  {/* Actions */}
+                  {!isLocked && (
+                    <div className="flex items-center gap-2 shrink-0 pt-1">
+                      <button
+                        onClick={() => navigate(`/learn/${topic.id}`)}
+                        className="px-3 py-1.5 rounded border border-[#DCD5C9] bg-[#FAF7F2] hover:bg-[#F2EDE4] text-xs font-medium text-[#1A1817]"
+                      >
+                        Learn
+                      </button>
+                      <button
+                        onClick={() => navigate(`/solve/${topic.id}`)}
+                        className="px-4 py-1.5 rounded bg-[#1B4332] hover:bg-[#112F23] text-white text-xs font-semibold shadow-xs"
+                      >
+                        Solve
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           );
         })}

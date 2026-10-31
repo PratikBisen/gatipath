@@ -2,9 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { db } from '../../lib/db';
-import { Card } from '../../components/ui/Card';
-import { MasteryBadge } from '../../components/ui/MasteryBadge';
-import { Award, ArrowRight, CheckCircle2, Lock } from 'lucide-react';
+import { Award, ArrowRight, Check, Lock } from 'lucide-react';
 
 export const AssessmentsList: React.FC = () => {
   const { currentUser, isStudent } = useAuth();
@@ -20,89 +18,81 @@ export const AssessmentsList: React.FC = () => {
   }, {} as Record<string, any>);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      <div>
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-light text-accent text-[11px] font-semibold mb-2">
-          <Award className="w-3.5 h-3.5" />
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* 1. Folio Masthead */}
+      <section className="border-b border-[#E8E2D8] pb-6">
+        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7A7265] mb-1.5">
           <span>Summative Checkpoints</span>
+          <span>·</span>
+          <span>Formal Diagnostic Evaluations</span>
+          <span>·</span>
+          <span>80% Mastery Requirement</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-charcoal tracking-tight">
-          Topic Assessments
+        <h1 className="font-editorial text-3xl sm:text-4xl font-bold tracking-tight text-[#1A1817]">
+          Curriculum Topic Assessments
         </h1>
-        <p className="text-xs sm:text-sm text-charcoal-muted mt-1 leading-relaxed">
-          Complete formal, un-scaffolded assessments to prove concept mastery and unlock curriculum progression.
+        <p className="text-sm sm:text-base text-[#5C5549] mt-2 leading-relaxed">
+          Summative assessments do not offer hints. Passing an assessment ($\ge 80\%$) with demonstrated independent success formally certifies topic mastery on your academic record.
         </p>
-      </div>
+      </section>
 
-      <div className="space-y-3.5">
+      {/* 2. Assessments List */}
+      <div className="divide-y divide-[#EAE4D8] border-y border-[#EAE4D8]">
         {topics.map((topic) => {
           const prog = progressMap[topic.id];
           const mastery = prog ? prog.masteryScore : 0;
           const isMastered = prog?.status === 'mastered';
-          const isReady = mastery >= 70;
+          const isReady = mastery >= 60;
           const lastScore = prog?.lastAssessmentScore;
 
           return (
-            <Card
+            <div
               key={topic.id}
-              className="p-5 hover:border-primary/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
-              <div className="flex items-start gap-3.5">
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                    isMastered
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                      : isReady
-                      ? 'bg-accent-light text-accent border border-accent/20'
-                      : 'bg-canvas-subtle text-charcoal-muted border border-border'
-                  }`}
-                >
-                  <Award className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-charcoal-muted">
-                      Topic {topic.sequenceOrder}
-                    </span>
-                    <span className="text-xs text-charcoal-muted">·</span>
-                    <MasteryBadge score={mastery} size="xs" />
-                  </div>
-                  <h3 className="text-base font-heading font-bold text-charcoal mt-0.5">
-                    {topic.title}
+              <div className="space-y-1">
+                <div className="flex items-center gap-2.5">
+                  <span className="font-mono text-xs font-semibold text-[#8C8377]">
+                    0{topic.sequenceOrder}
+                  </span>
+                  <h3 className="font-editorial text-lg font-bold text-[#1A1817]">
+                    {topic.title} Assessment
                   </h3>
-                  <p className="text-xs text-charcoal-muted mt-0.5">
-                    {lastScore !== undefined
-                      ? `Last assessment score: ${lastScore}% (Passing threshold: 80%)`
-                      : 'Not yet attempted · 5 formal assessment questions'}
-                  </p>
+                  {isMastered && (
+                    <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-[#E8F4EE] text-[#1B4332]">
+                      Certified Mastered
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs text-[#5C5549] max-w-xl">
+                  5 formal questions · 15 minutes · Evaluates full topic proficiency
+                </p>
+
+                <div className="flex items-center gap-4 text-xs font-mono text-[#7A7265] pt-0.5">
+                  <span>Practice Mastery: <strong className="text-[#1A1817]">{mastery}%</strong></span>
+                  {lastScore !== undefined && (
+                    <span>Last Test Score: <strong className="text-[#1A1817]">{lastScore}%</strong></span>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                {isMastered ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Mastered</span>
-                    </span>
-                    <button
-                      onClick={() => navigate(`/test/${topic.id}`)}
-                      className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-surface hover:bg-canvas text-charcoal transition-colors"
-                    >
-                      Retake
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => navigate(`/test/${topic.id}`)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover shadow-2xs transition-colors"
-                  >
-                    <span>Start Assessment</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
+              {/* Action */}
+              <div className="shrink-0">
+                <button
+                  onClick={() => navigate(`/test/${topic.id}`)}
+                  className={`px-4 py-2 rounded text-xs font-semibold transition-all ${
+                    isMastered
+                      ? 'border border-[#DCD5C9] bg-white text-[#5C5549] hover:bg-[#F2EDE4]'
+                      : isReady
+                      ? 'bg-[#1B4332] text-white hover:bg-[#112F23] shadow-xs'
+                      : 'border border-[#DCD5C9] bg-[#FAF7F2] text-[#7A7265] hover:bg-[#F2EDE4]'
+                  }`}
+                >
+                  {isMastered ? 'Retake Checkpoint' : isReady ? 'Take Assessment →' : 'Attempt Assessment'}
+                </button>
               </div>
-            </Card>
+            </div>
           );
         })}
       </div>

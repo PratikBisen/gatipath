@@ -3,10 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { db } from '../../lib/db';
 import { StudentTopicProgress, Recommendation, Attempt } from '../../types';
-import { Card, CardHeader, CardContent, CardFooter } from '../../components/ui/Card';
-import { StatCard } from '../../components/ui/StatCard';
-import { MasteryBadge } from '../../components/ui/MasteryBadge';
-import { ProgressBar } from '../../components/ui/ProgressBar';
 import {
   BookOpen,
   ArrowRight,
@@ -15,8 +11,12 @@ import {
   Sparkles,
   Award,
   ChevronRight,
-  Target,
-  GraduationCap
+  Compass,
+  AlertCircle,
+  HelpCircle,
+  Check,
+  Lock,
+  RotateCcw
 } from 'lucide-react';
 
 export const StudentDashboard: React.FC = () => {
@@ -34,13 +34,13 @@ export const StudentDashboard: React.FC = () => {
     if (student) {
       setProgressList(db.getStudentProgress(student.id));
       setRecommendations(db.getRecommendations(student.id));
-      setRecentAttempts(db.getAttempts(student.id).slice(0, 5));
+      setRecentAttempts(db.getAttempts(student.id).slice(0, 6));
     }
   }, [student]);
 
   const activeRec = recommendations.find(r => r.status === 'active') || recommendations[0];
 
-  // Find the current active topic
+  // Find current topic that is not yet mastered
   const currentTopic = topics.find(t => {
     const prog = progressList.find(p => p.topicId === t.id);
     return !prog || prog.status !== 'mastered';
@@ -54,265 +54,314 @@ export const StudentDashboard: React.FC = () => {
     ? Math.round(progressList.reduce((acc, p) => acc + p.masteryScore, 0) / topics.length)
     : 0;
 
+  const studentInterventions = db.getTeacherInterventions().filter(i => i.studentId === student.id);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* Header Greeting */}
-      <div className="bg-surface rounded-2xl border border-border p-6 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      {/* 1. Scholarly Studio Masthead */}
+      <section className="border-b border-[#E8E2D8] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-subtle text-primary text-[11px] font-semibold mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Class 7 Mathematics · Fractions Pilot</span>
+          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7A7265] mb-1.5">
+            <span>Student Study Studio</span>
+            <span>·</span>
+            <span>Mathematics Class 7</span>
+            <span>·</span>
+            <span className="text-[#1B4332] font-semibold">Active Session</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-charcoal tracking-tight">
-            Namaste, {student.displayName}
+          <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#1A1817]">
+            Namaste, {student.displayName.split(' ')[0]}.
           </h1>
-          <p className="text-xs sm:text-sm text-charcoal-muted mt-1 leading-relaxed">
-            Learning that moves at your pace. Master foundational concepts before advancing to the next challenge.
+          <p className="text-sm sm:text-base text-[#5C5549] mt-2 max-w-2xl leading-relaxed">
+            Welcome to your fractions study desk. GatiPath adapts to how you solve problems, highlighting concepts to revisit before moving forward.
           </p>
         </div>
 
-        {/* Quick summary stats */}
-        <div className="flex items-center gap-3 bg-canvas-subtle p-3.5 rounded-xl border border-border shrink-0">
-          <div className="text-center px-2">
-            <span className="block text-2xl font-bold font-heading text-primary tabular-nums">
-              {masteredCount}/{topics.length}
-            </span>
-            <span className="text-[11px] text-charcoal-muted font-medium">Topics Mastered</span>
+        {/* Milestone Snapshot Bar */}
+        <div className="flex items-center gap-6 sm:gap-8 font-mono border-l-0 md:border-l border-[#E2DBD0] md:pl-8">
+          <div>
+            <div className="text-[11px] uppercase tracking-widest text-[#7A7265]">Modules Mastered</div>
+            <div className="text-2xl sm:text-3xl font-bold text-[#1A1817] mt-0.5">
+              {masteredCount} <span className="text-sm text-[#8C8377] font-normal">/ {topics.length}</span>
+            </div>
           </div>
-          <div className="h-8 w-px bg-border" />
-          <div className="text-center px-2">
-            <span className="block text-2xl font-bold font-heading text-charcoal tabular-nums">
+          <div>
+            <div className="text-[11px] uppercase tracking-widest text-[#7A7265]">Overall Mastery</div>
+            <div className="text-2xl sm:text-3xl font-bold text-[#1B4332] mt-0.5">
               {overallMastery}%
-            </span>
-            <span className="text-[11px] text-charcoal-muted font-medium">Curriculum Pace</span>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Adaptive Recommendation Card */}
-      {activeRec && (
-        <div className="bg-gradient-to-r from-emerald-50/80 to-teal-50/80 border border-emerald-200/80 rounded-xl p-5 shadow-2xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="p-2.5 rounded-lg bg-primary text-white shrink-0 mt-0.5">
-                <Target className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                    Adaptive Recommendation
-                  </span>
-                  {activeRec.misconceptionTag && (
-                    <span className="text-[10px] px-2 py-0.5 bg-rose-50 text-rose-800 border border-rose-200 rounded-full font-semibold">
-                      Targeted Revision
-                    </span>
-                  )}
+      {/* 2. Today's Study Focus — Hero Atelier Workspace */}
+      <section className="bg-white rounded-xl border border-[#E0D8CC] shadow-xs overflow-hidden">
+        <div className="bg-[#FAF7F2] border-b border-[#E8E2D8] px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-[#C57D36] animate-pulse" />
+            <span className="font-mono text-xs uppercase tracking-wider font-semibold text-[#1A1817]">
+              Current Adaptive Learning Focus
+            </span>
+          </div>
+          <div className="flex items-center gap-2 font-mono text-xs text-[#7A7265]">
+            <span>Topic {currentTopic.sequenceOrder} of {topics.length}</span>
+            <span>·</span>
+            <span className="text-[#1B4332] font-semibold">{currentMastery}% Mastery</span>
+          </div>
+        </div>
+
+        <div className="p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+            <div className="space-y-2 max-w-3xl">
+              <span className="font-mono text-[11px] uppercase tracking-widest text-[#8C8377]">
+                Module {String(currentTopic.sequenceOrder).padStart(2, '0')}
+              </span>
+              <h2 className="font-editorial text-2xl sm:text-3xl font-bold text-[#1A1817]">
+                {currentTopic.title}
+              </h2>
+              <p className="text-sm sm:text-base text-[#5C5549] leading-relaxed">
+                {currentTopic.description}
+              </p>
+            </div>
+
+            {/* Primary Action Button Cluster */}
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+              <button
+                onClick={() => navigate(`/solve/${currentTopic.id}`)}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-[#1B4332] text-white hover:bg-[#112F23] text-sm font-medium transition-all shadow-xs"
+              >
+                <span>Practice Questions (Solve)</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => navigate(`/learn/${currentTopic.id}`)}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-[#DCD5C9] bg-[#FAF7F2] hover:bg-[#F2EDE4] text-xs font-semibold text-[#1A1817] transition-all"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-[#5C5549]" />
+                <span>Read Concept Guide</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Adaptive Diagnostic Rationale Callout */}
+          {activeRec && (
+            <div className="rounded-lg bg-[#F8F5EE] border border-[#E6DFD3] p-4 sm:p-5 flex items-start gap-4">
+              <Sparkles className="w-5 h-5 text-[#C57D36] shrink-0 mt-0.5" />
+              <div className="space-y-1 text-xs sm:text-sm text-[#4A453D] leading-relaxed">
+                <div className="font-mono uppercase text-[10px] tracking-wider text-[#C57D36] font-semibold">
+                  Why this is recommended for you
                 </div>
-                <h3 className="text-sm sm:text-base font-heading font-bold text-charcoal">
+                <div className="font-editorial text-base font-bold text-[#1A1817]">
                   {activeRec.title}
-                </h3>
-                <p className="text-xs text-charcoal-muted leading-relaxed max-w-3xl">
+                </div>
+                <p className="text-[#5C5549]">
                   {activeRec.explanation}
                 </p>
               </div>
             </div>
+          )}
 
-            <button
-              onClick={() => navigate(activeRec.suggestedActionRoute)}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover transition-colors shadow-2xs shrink-0"
-            >
-              <span>{activeRec.suggestedActionLabel}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+          {/* Precision Mastery Progress Track */}
+          <div className="space-y-1.5 pt-2">
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="text-[#7A7265]">Concept Understanding Progress</span>
+              <span className="font-semibold text-[#1A1817]">
+                {currentMastery}% <span className="text-[#8C8377] font-normal">(Mastery threshold: 85%)</span>
+              </span>
+            </div>
+            <div className="h-2 w-full bg-[#EAE4D8] rounded-full overflow-hidden relative">
+              <div
+                className="h-full bg-[#1B4332] transition-all duration-500 rounded-full"
+                style={{ width: `${Math.min(currentMastery, 100)}%` }}
+              />
+              <div
+                className="absolute top-0 bottom-0 w-[2px] bg-[#9C958C]"
+                style={{ left: '85%' }}
+                title="85% Mastery Requirement"
+              />
+            </div>
           </div>
         </div>
-      )}
+      </section>
 
-      {/* Current Topic Focus Hero Card */}
-      {currentTopic && (
-        <Card className="p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
-                Current Learning Focus
-              </span>
-              <span className="text-xs text-charcoal-muted">· Topic {currentTopic.sequenceOrder} of 4</span>
+      {/* 3. Main Grid: Curriculum Syllabus on Left (65%) + Study Ledger on Right (35%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Open Curriculum Roadmap (7 cols) */}
+        <section className="lg:col-span-8 space-y-6">
+          <div className="flex items-center justify-between border-b border-[#E8E2D8] pb-3">
+            <div>
+              <h3 className="font-editorial text-xl font-bold text-[#1A1817]">
+                Curriculum Syllabus · Class 7 Fractions
+              </h3>
+              <p className="text-xs text-[#7A7265] mt-0.5">
+                Complete modules sequentially. Each module builds upon prerequisites.
+              </p>
             </div>
-            <MasteryBadge score={currentMastery} />
-          </div>
-
-          <h2 className="text-lg sm:text-xl font-heading font-bold text-charcoal">
-            {currentTopic.title}
-          </h2>
-          <p className="text-xs sm:text-sm text-charcoal-muted mt-1 max-w-2xl leading-relaxed">
-            {currentTopic.description}
-          </p>
-
-          {/* Mastery Bar */}
-          <div className="mt-4 space-y-1.5 max-w-2xl">
-            <div className="flex justify-between text-xs text-charcoal-muted font-medium">
-              <span>Topic Understanding</span>
-              <span className="font-semibold text-charcoal tabular-nums">{currentMastery}% (Target: 85% for mastery)</span>
-            </div>
-            <ProgressBar value={currentMastery} target={85} size="md" />
-          </div>
-
-          <div className="mt-6 flex flex-wrap items-center gap-2.5 pt-4 border-t border-border">
-            <button
-              onClick={() => navigate(`/solve/${currentTopic.id}`)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover transition-colors shadow-2xs"
+            <Link
+              to="/student/path"
+              className="text-xs font-mono text-[#1B4332] hover:text-[#112F23] flex items-center gap-1 font-semibold"
             >
-              <span>Practice Questions (Solve)</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => navigate(`/learn/${currentTopic.id}`)}
-              className="inline-flex items-center gap-2 px-3.5 py-2 bg-canvas-subtle hover:bg-canvas text-charcoal text-xs font-medium rounded-lg border border-border transition-colors"
-            >
-              <BookOpen className="w-4 h-4 text-charcoal-muted" />
-              <span>Read Explanation & Worked Examples</span>
-            </button>
-            {currentMastery >= 70 && (
-              <button
-                onClick={() => navigate(`/test/${currentTopic.id}`)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-accent-light text-accent hover:bg-accent hover:text-white text-xs font-semibold rounded-lg border border-accent/20 transition-colors"
-              >
-                <Award className="w-4 h-4" />
-                <span>Take Assessment</span>
-              </button>
-            )}
+              <span>View Prerequisite Map</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
-        </Card>
-      )}
 
-      {/* Grid: All Module Topics & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Fractions Curriculum Roadmap */}
-        <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader
-              title="Class 7 Mathematics — Fractions Module"
-              subtitle="Step-by-step sequential mastery path."
-              action={
-                <Link
-                  to="/student/path"
-                  className="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5"
+          {/* Open Syllabus Entries */}
+          <div className="divide-y divide-[#EAE4D8] border-y border-[#EAE4D8]">
+            {topics.map((topic) => {
+              const prog = progressList.find(p => p.topicId === topic.id);
+              const score = prog ? prog.masteryScore : 0;
+              const isMastered = prog?.status === 'mastered';
+              const isCurrent = topic.id === currentTopic.id;
+              const isLocked = topic.sequenceOrder > 1 && (!progressList.find(p => p.topicId === `topic-${topic.sequenceOrder - 1}`) || progressList.find(p => p.topicId === `topic-${topic.sequenceOrder - 1}`)?.masteryScore! < 40);
+
+              return (
+                <div
+                  key={topic.id}
+                  className={`py-5 transition-colors ${isCurrent ? 'bg-[#FAF7F2] -mx-4 px-4 sm:-mx-6 sm:px-6 rounded-lg' : ''}`}
                 >
-                  <span>Prerequisite Map</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              }
-            />
-
-            <div className="divide-y divide-border">
-              {topics.map(topic => {
-                const prog = progressList.find(p => p.topicId === topic.id);
-                const score = prog ? prog.masteryScore : 0;
-                const isMastered = prog?.status === 'mastered';
-
-                return (
-                  <div
-                    key={topic.id}
-                    className="p-4 px-5 hover:bg-canvas-subtle/40 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  >
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
-                          isMastered
-                            ? 'bg-primary text-white'
-                            : 'bg-canvas-subtle text-charcoal-muted border border-border'
-                        }`}
-                      >
-                        {topic.sequenceOrder}
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-sm font-heading font-bold text-charcoal flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-semibold text-[#8C8377]">
+                          0{topic.sequenceOrder}
+                        </span>
+                        <h4 className="font-editorial text-lg font-bold text-[#1A1817] truncate">
                           {topic.title}
-                          {isMastered && <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />}
                         </h4>
-                        <p className="text-xs text-charcoal-muted mt-0.5 line-clamp-1">
-                          {topic.description}
-                        </p>
+                        {isMastered && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[10px] font-semibold bg-[#E8F4EE] text-[#1B4332]">
+                            <Check className="w-3 h-3" /> Mastered
+                          </span>
+                        )}
+                        {isCurrent && (
+                          <span className="px-2 py-0.5 rounded font-mono text-[10px] font-semibold bg-[#FAF1E4] text-[#C57D36]">
+                            Active Focus
+                          </span>
+                        )}
+                        {isLocked && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[10px] text-[#7A7265] bg-[#EFEAE2]">
+                            <Lock className="w-3 h-3" /> Prerequisite Locked
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-[#5C5549] line-clamp-2 leading-relaxed">
+                        {topic.description}
+                      </p>
+
+                      <div className="flex items-center gap-4 text-xs font-mono text-[#7A7265] pt-1">
+                        <span>Mastery: <strong className="text-[#1A1817]">{score}%</strong></span>
+                        <span>·</span>
+                        <span>Estimated: {topic.estimatedMinutes} mins</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
-                      <MasteryBadge score={score} size="xs" />
-                      <div className="flex items-center gap-1.5">
+                    {/* Quick Module Actions */}
+                    <div className="flex items-center gap-2 shrink-0 pt-1">
+                      <button
+                        onClick={() => navigate(`/learn/${topic.id}`)}
+                        className="px-3 py-1.5 rounded border border-[#DCD5C9] bg-white hover:bg-[#F4EFE6] text-xs font-medium text-[#1A1817] transition-colors"
+                      >
+                        Learn
+                      </button>
+                      <button
+                        onClick={() => navigate(`/solve/${topic.id}`)}
+                        className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
+                          isCurrent
+                            ? 'bg-[#1B4332] text-white hover:bg-[#112F23]'
+                            : 'border border-[#DCD5C9] bg-white hover:bg-[#F4EFE6] text-[#1A1817]'
+                        }`}
+                      >
+                        Solve
+                      </button>
+                      {score >= 70 && (
                         <button
-                          onClick={() => navigate(`/learn/${topic.id}`)}
-                          className="px-2.5 py-1 text-xs font-medium rounded-md border border-border hover:bg-canvas text-charcoal"
+                          onClick={() => navigate(`/test/${topic.id}`)}
+                          className="px-3 py-1.5 rounded border border-[#C57D36] bg-[#FAF3EB] text-[#C57D36] hover:bg-[#F4E6D4] text-xs font-semibold transition-colors"
                         >
-                          Learn
+                          Assessment
                         </button>
-                        <button
-                          onClick={() => navigate(`/solve/${topic.id}`)}
-                          className="px-2.5 py-1 text-xs font-semibold rounded-md bg-primary text-white hover:bg-primary-hover shadow-2xs"
-                        >
-                          Solve
-                        </button>
-                      </div>
+                      )}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </Card>
-        </div>
-
-        {/* Right Col: Recent Activity Timeline */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader
-              title="Recent Practice Activity"
-              subtitle="Your chronological questions and evaluations."
-            />
-            <div className="divide-y divide-border">
-              {recentAttempts.length === 0 ? (
-                <div className="p-8 text-xs text-charcoal-muted text-center">
-                  No recorded attempts yet. Start practicing to see your pace here!
                 </div>
-              ) : (
-                recentAttempts.map(attempt => {
-                  const topic = topics.find(t => t.id === attempt.topicId);
-                  const isCorrect = attempt.isCorrect;
+              );
+            })}
+          </div>
+        </section>
 
-                  return (
-                    <div key={attempt.id} className="p-3.5 px-5 flex items-start gap-3 text-xs">
-                      <div
-                        className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                          isCorrect
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200'
-                        }`}
-                      >
-                        {isCorrect ? '✓' : '✗'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-charcoal truncate">
-                          {topic?.title || 'Practice Question'}
-                        </p>
-                        <p className="text-[11px] text-charcoal-muted">
-                          {isCorrect
-                            ? attempt.hintUsed
-                              ? 'Solved with hint (+70 pts)'
-                              : 'Solved independently (+100 pts)'
-                            : attempt.detectedMisconception
-                            ? 'Concept check needed'
-                            : 'Incorrect answer'}
-                        </p>
-                      </div>
-                      <span className="text-[10px] text-charcoal-muted shrink-0 flex items-center gap-1 tabular-nums">
-                        <Clock className="w-3 h-3" />
-                        {attempt.timeTakenSeconds}s
+        {/* Right Column: Scholar's Study Log (5 cols) */}
+        <aside className="lg:col-span-4 space-y-6">
+          {/* Teacher Guidance / Assigned Interventions */}
+          {studentInterventions.length > 0 && (
+            <div className="bg-[#FAF7F2] rounded-xl border border-[#E0D8CC] p-5 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#1B4332] font-semibold">
+                <BookOpen className="w-4 h-4" />
+                <span>Guidance from Teacher Sunita</span>
+              </div>
+              {studentInterventions.map(item => (
+                <div key={item.id} className="text-xs text-[#4A453D] space-y-1 border-t border-[#E8E2D8] pt-2">
+                  <div className="font-semibold text-[#1A1817] capitalize">{item.interventionType.replace('_', ' ')}</div>
+                  <p className="text-[#5C5549] leading-relaxed">{item.interventionNote}</p>
+                  <span className="font-mono text-[10px] text-[#7A7265]">Status: {item.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Recent Problem Journal */}
+          <div className="bg-white rounded-xl border border-[#E0D8CC] p-5 space-y-4">
+            <div className="border-b border-[#EFEAE2] pb-2 flex items-center justify-between">
+              <h3 className="font-editorial text-base font-bold text-[#1A1817]">
+                Recent Problem Journal
+              </h3>
+              <span className="font-mono text-[10px] text-[#7A7265]">Last 6 answers</span>
+            </div>
+
+            {recentAttempts.length === 0 ? (
+              <p className="text-xs text-[#7A7265] py-4 text-center">No practice problems logged yet.</p>
+            ) : (
+              <div className="divide-y divide-[#F2EDE4]">
+                {recentAttempts.map((attempt) => (
+                  <div key={attempt.id} className="py-2.5 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-[#1A1817]">
+                        Question #{attempt.questionId.slice(-1)}
+                      </span>
+                      <span className={`font-mono text-[10px] font-semibold px-1.5 py-0.2 rounded ${
+                        attempt.isCorrect
+                          ? 'bg-[#E8F4EE] text-[#1B4332]'
+                          : 'bg-[#FEEBEB] text-[#8C2828]'
+                      }`}>
+                        {attempt.isCorrect ? (attempt.hintUsed ? '+70 pts (Hint)' : '+100 pts') : 'Review'}
                       </span>
                     </div>
-                  );
-                })
-              )}
-            </div>
-          </Card>
-        </div>
+                    <div className="text-[11px] text-[#5C5549] flex items-center justify-between">
+                      <span>Submitted: <code className="font-mono">{attempt.submittedAnswer}</code></span>
+                      <span className="font-mono text-[10px] text-[#8C8377]">
+                        {new Date(attempt.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    {attempt.detectedMisconception && (
+                      <div className="text-[11px] text-[#8C2828] bg-[#FFF5F5] p-1.5 rounded mt-1">
+                        Flagged misconception: {attempt.detectedMisconception.replace(/_/g, ' ')}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Quick Study Tip */}
+          <div className="border-l-2 border-[#C57D36] pl-3 py-1 text-xs text-[#5C5549] space-y-0.5">
+            <span className="font-mono text-[10px] uppercase font-semibold text-[#C57D36]">Math Principle</span>
+            <p className="italic font-editorial text-sm text-[#1A1817]">
+              "The denominator is the name of the fraction part; the numerator tells you how many parts you have."
+            </p>
+          </div>
+        </aside>
       </div>
     </div>
   );

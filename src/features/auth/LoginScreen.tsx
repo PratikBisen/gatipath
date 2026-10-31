@@ -7,7 +7,7 @@ import {
   GraduationCap,
   Users,
   ShieldCheck,
-  CheckCircle2
+  Check
 } from 'lucide-react';
 
 export const LoginScreen: React.FC = () => {
@@ -49,155 +49,117 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-canvas flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        {/* Brand Wordmark & Icon */}
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary text-white font-heading font-extrabold text-2xl shadow-card mb-3">
+    <div className="min-h-screen bg-[#FBF9F5] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
+        {/* Brand Monogram */}
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#1A1817] text-[#FAF7F2] font-editorial font-bold text-2xl shadow-xs">
           G
         </div>
-        <h1 className="text-3xl font-heading font-extrabold text-charcoal tracking-tight">
-          GatiPath
+        <h1 className="text-3xl sm:text-4xl font-editorial font-bold text-[#1A1817] tracking-tight">
+          GĀTIPATH
         </h1>
-        <p className="text-sm font-medium text-charcoal-muted mt-1">
-          Learning that moves at your pace.
+        <p className="text-xs uppercase font-mono tracking-widest text-[#7A7265]">
+          Adaptive Learning Atelier · Indian School Mathematics
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-        <div className="bg-surface py-8 px-6 sm:px-10 rounded-2xl border border-border shadow-card space-y-6">
-          {/* Quick 1-Click Demo Account Switcher */}
-          <div className="p-4 bg-canvas-subtle rounded-xl border border-border space-y-3">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-charcoal-muted uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4 text-primary" />
-              <span>Instant Hackathon Evaluation Access</span>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-6 sm:px-10 rounded-xl border border-[#E0D8CC] shadow-xs space-y-6">
+          {/* Quick Demo Evaluation Section */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-[#7A7265] pb-2 border-b border-[#EFEAE2]">
+              <span>Instant Demonstration Access</span>
+              <span className="text-[#1B4332] font-bold">1-Click</span>
             </div>
-            <p className="text-xs text-charcoal-muted leading-relaxed">
-              Click either persona below to test GatiPath with persistent demonstration records:
-            </p>
 
-            <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => handleDemoQuickLogin('student')}
-                className="p-3 bg-surface rounded-xl border border-border hover:border-primary/60 text-left transition-all hover:shadow-2xs group"
+                className="p-3.5 rounded-lg border border-[#DCD5C9] bg-[#FAF7F2] hover:bg-[#F2EDE4] text-left transition-all group"
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <GraduationCap className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold text-charcoal group-hover:text-primary transition-colors">
-                    Aarav (Student)
-                  </span>
+                <div className="flex items-center gap-2 text-xs font-bold text-[#1A1817] group-hover:text-[#1B4332]">
+                  <GraduationCap className="w-4 h-4 text-[#1B4332]" />
+                  <span>Student</span>
                 </div>
-                <p className="text-[11px] text-charcoal-muted truncate">
-                  student@gatipath.demo
-                </p>
+                <div className="text-[11px] text-[#5C5549] mt-1 font-mono">
+                  Aarav Sharma
+                </div>
+                <div className="text-[10px] text-[#8C8377] mt-0.5">
+                  Class 7 Fractions
+                </div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleDemoQuickLogin('teacher')}
-                className="p-3 bg-surface rounded-xl border border-border hover:border-primary/60 text-left transition-all hover:shadow-2xs group"
+                className="p-3.5 rounded-lg border border-[#DCD5C9] bg-[#FAF7F2] hover:bg-[#F2EDE4] text-left transition-all group"
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <Users className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold text-charcoal group-hover:text-primary transition-colors">
-                    Sunita (Teacher)
-                  </span>
+                <div className="flex items-center gap-2 text-xs font-bold text-[#1A1817] group-hover:text-[#1B4332]">
+                  <Users className="w-4 h-4 text-[#1B4332]" />
+                  <span>Teacher</span>
                 </div>
-                <p className="text-[11px] text-charcoal-muted truncate">
-                  teacher@gatipath.demo
-                </p>
+                <div className="text-[11px] text-[#5C5549] mt-1 font-mono">
+                  Sunita Verma
+                </div>
+                <div className="text-[10px] text-[#8C8377] mt-0.5">
+                  Class 7-B Command
+                </div>
               </button>
             </div>
           </div>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
+              <div className="w-full border-t border-[#E8E2D8]" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-surface px-3 text-charcoal-muted font-bold tracking-wider text-[10px]">
-                Or Sign In Manually
-              </span>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-3 bg-white text-[#8C8377] font-mono text-[11px]">or sign in with credentials</span>
             </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleFormLogin} className="space-y-4">
+          <form onSubmit={handleFormLogin} className="space-y-4 text-xs">
             {error && (
-              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-800">
+              <div className="p-3 bg-[#FFF5F5] border border-[#FCD4D4] rounded-lg text-xs text-[#8C2828]">
                 {error}
               </div>
             )}
 
-            {/* Role Tab */}
-            <div className="grid grid-cols-2 gap-1 p-1 bg-canvas-subtle rounded-lg border border-border text-xs">
-              <button
-                type="button"
-                onClick={() => setSelectedRole('student')}
-                className={`py-2 rounded-md font-semibold transition-colors ${
-                  selectedRole === 'student'
-                    ? 'bg-surface text-primary shadow-2xs'
-                    : 'text-charcoal-muted'
-                }`}
-              >
-                Student
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedRole('teacher')}
-                className={`py-2 rounded-md font-semibold transition-colors ${
-                  selectedRole === 'teacher'
-                    ? 'bg-surface text-primary shadow-2xs'
-                    : 'text-charcoal-muted'
-                }`}
-              >
-                Teacher
-              </button>
-            </div>
-
             <div>
-              <label className="block text-xs font-semibold text-charcoal mb-1">
-                Email Address
+              <label className="block text-[11px] font-mono uppercase text-[#7A7265] font-semibold mb-1">
+                Account Email
               </label>
               <input
                 type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder={selectedRole === 'student' ? 'student@gatipath.demo' : 'teacher@gatipath.demo'}
-                className="w-full p-2.5 text-xs rounded-lg border border-border bg-canvas-subtle text-charcoal focus:border-primary focus:bg-white outline-none transition-colors"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. student@gatipath.demo"
+                className="w-full p-2.5 rounded border border-[#DCD5C9] bg-white text-[#1A1817] focus:outline-none focus:border-[#1A1817]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-charcoal mb-1">
+              <label className="block text-[11px] font-mono uppercase text-[#7A7265] font-semibold mb-1">
                 Password
               </label>
               <input
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full p-2.5 text-xs rounded-lg border border-border bg-canvas-subtle text-charcoal focus:border-primary focus:bg-white outline-none transition-colors"
+                className="w-full p-2.5 rounded border border-[#DCD5C9] bg-white text-[#1A1817] focus:outline-none focus:border-[#1A1817]"
               />
-              <span className="block text-[11px] text-charcoal-muted mt-1">
-                Any password accepted for demonstration mode.
-              </span>
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 px-4 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover shadow-2xs transition-colors flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 rounded-lg bg-[#1B4332] text-white hover:bg-[#112F23] font-semibold text-xs shadow-xs transition-all"
             >
-              <span>Sign In</span>
-              <ArrowRight className="w-4 h-4" />
+              Sign In to Workspace
             </button>
           </form>
-        </div>
-
-        {/* Footer Note */}
-        <div className="mt-6 text-center text-xs text-charcoal-muted">
-          <p>Class 7 Mathematics Pilot · Fraction Arithmetic & Adaptive Pacing</p>
         </div>
       </div>
     </div>

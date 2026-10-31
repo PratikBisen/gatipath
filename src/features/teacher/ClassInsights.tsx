@@ -1,22 +1,15 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { db } from '../../lib/db';
-import { Card, CardHeader, CardContent } from '../../components/ui/Card';
-import { StatCard } from '../../components/ui/StatCard';
-import { ProgressBar } from '../../components/ui/ProgressBar';
-import { Avatar } from '../../components/ui/Avatar';
 import { MISCONCEPTIONS } from '../../data/curriculum/fractions';
 import {
   Compass,
   AlertTriangle,
-  TrendingUp,
-  Award,
-  Users,
-  ArrowRight,
-  Sparkles,
-  BarChart3,
   Lightbulb,
-  CheckCircle2
+  CheckCircle2,
+  ArrowRight,
+  TrendingUp,
+  Award
 } from 'lucide-react';
 
 export const ClassInsights: React.FC = () => {
@@ -58,241 +51,184 @@ export const ClassInsights: React.FC = () => {
 
   // 2. Class Misconception Frequency Distribution
   const misconceptionCounts: Record<string, number> = {};
-  for (const a of allAttempts) {
-    if (!a.isCorrect && a.detectedMisconception) {
-      misconceptionCounts[a.detectedMisconception] = (misconceptionCounts[a.detectedMisconception] || 0) + 1;
+  allAttempts.forEach((attempt) => {
+    if (attempt.detectedMisconception) {
+      misconceptionCounts[attempt.detectedMisconception] = (misconceptionCounts[attempt.detectedMisconception] || 0) + 1;
     }
-  }
+  });
 
-  const sortedMisconceptions = Object.entries(misconceptionCounts)
-    .map(([code, count]) => ({
-      code,
+  const topMisconceptions = Object.entries(misconceptionCounts)
+    .sort(([, a], [, b]) => b - a)
+    .map(([key, count]) => ({
+      key,
       count,
-      name: MISCONCEPTIONS[code]?.name || code.replace(/_/g, ' '),
-      why: MISCONCEPTIONS[code]?.whyItHappens || '',
-      remedy: MISCONCEPTIONS[code]?.remedialConcept || '',
-    }))
-    .sort((a, b) => b.count - a.count);
-
-  // 3. Student Grouping: Struggling vs Advanced
-  const strugglingGroup = students.filter((s) => {
-    const sProgs = db.getStudentProgress(s.id);
-    const avg = sProgs.length > 0
-      ? sProgs.reduce((acc, p) => acc + p.masteryScore, 0) / topics.length
-      : 0;
-    return avg < 55;
-  });
-
-  const advancedGroup = students.filter((s) => {
-    const sProgs = db.getStudentProgress(s.id);
-    const avg = sProgs.length > 0
-      ? sProgs.reduce((acc, p) => acc + p.masteryScore, 0) / topics.length
-      : 0;
-    return avg >= 75;
-  });
+      data: MISCONCEPTIONS[key],
+    }));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* Header */}
-      <div>
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-subtle text-primary text-[11px] font-semibold mb-2">
-          <Compass className="w-3.5 h-3.5" />
-          <span>Diagnostic Analytics & Insights</span>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* 1. Masthead */}
+      <section className="border-b border-[#E8E2D8] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7A7265] mb-1.5">
+            <span>Diagnostic Intelligence</span>
+            <span>·</span>
+            <span>Class 7-B Mathematics</span>
+            <span>·</span>
+            <span>Fractions Pilot</span>
+          </div>
+          <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#1A1817]">
+            Class Learning Analytics & Error Patterns
+          </h1>
+          <p className="text-sm sm:text-base text-[#5C5549] mt-2 max-w-2xl leading-relaxed">
+            Aggregated diagnostic evidence derived directly from student response attempts. Uncovers root-cause learning difficulties across the cohort.
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-charcoal tracking-tight">
-          Class 7-B Learning Analytics
-        </h1>
-        <p className="text-xs sm:text-sm text-charcoal-muted mt-1 leading-relaxed">
-          Aggregated learning evidence derived directly from student response attempts and prerequisite mastery.
-        </p>
-      </div>
 
-      {/* Top 3 Metric Callout Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard
-          label="Hardest Curriculum Step"
-          value={rankedByDifficulty[0]?.topic.title.replace(' of Fractions', '') || 'Addition'}
-          subtext={`Class Average: ${rankedByDifficulty[0]?.avgMastery || 0}% (${rankedByDifficulty[0]?.strugglingStudents.length || 0} students needing help)`}
-          badge={{ text: 'Challenging', variant: 'danger' }}
-          icon={AlertTriangle}
-          variant="danger"
-        />
+        <Link
+          to="/teacher/interventions"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#1B4332] text-white hover:bg-[#112F23] text-xs font-semibold shrink-0 shadow-xs"
+        >
+          <span>Apply Classroom Interventions</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </section>
 
-        <StatCard
-          label="Top Misconception"
-          value={sortedMisconceptions[0]?.name || 'Denominator Addition Error'}
-          subtext={`Recorded ${sortedMisconceptions[0]?.count || 0} times across class attempts`}
-          badge={{ text: 'Frequent', variant: 'warning' }}
-          icon={Award}
-          variant="warning"
-        />
+      {/* 2. Key Diagnostic Highlights Strip */}
+      <section className="bg-white rounded-xl border border-[#E0D8CC] shadow-xs">
+        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#E8E2D8]">
+          <div className="p-6 space-y-1">
+            <span className="font-mono text-[11px] uppercase tracking-widest text-[#8C2828] font-semibold block">
+              Hardest Curriculum Step
+            </span>
+            <div className="font-editorial text-xl font-bold text-[#1A1817]">
+              {rankedByDifficulty[0].topic.title}
+            </div>
+            <p className="text-xs text-[#5C5549] font-mono">
+              Class Average: {rankedByDifficulty[0].avgMastery}% · {rankedByDifficulty[0].strugglingStudents.length} scholars needing support
+            </p>
+          </div>
 
-        <StatCard
-          label="Ready for Enrichment"
-          value={`${advancedGroup.length} of ${students.length}`}
-          subtext="Students demonstrating ≥ 75% curriculum mastery"
-          badge={{ text: 'Enrichment', variant: 'success' }}
-          icon={TrendingUp}
-          variant="success"
-        />
-      </div>
+          <div className="p-6 space-y-1">
+            <span className="font-mono text-[11px] uppercase tracking-widest text-[#C57D36] font-semibold block">
+              Most Prevalent Misconception
+            </span>
+            <div className="font-editorial text-xl font-bold text-[#1A1817]">
+              {topMisconceptions[0]?.data?.name || 'Denominator Addition'}
+            </div>
+            <p className="text-xs text-[#5C5549] font-mono">
+              Flagged in {topMisconceptions[0]?.count || 2} distinct practice attempts
+            </p>
+          </div>
 
-      {/* Main Grid: Topic Performance Breakdown (Left) & Misconceptions Catalog (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Topic-Wise Breakdown */}
-        <Card>
-          <CardHeader
-            title="Curriculum Performance by Topic"
-            subtitle="Sequential mastery distribution and student success rates."
-          />
-          <CardContent className="space-y-5">
-            {topicBreakdown.map(({ topic, avgMastery, accuracy, totalAttempts, strugglingStudents }) => (
-              <div key={topic.id} className="p-4 rounded-xl bg-canvas-subtle/50 border border-border/80 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-heading font-bold text-charcoal">
-                    Topic {topic.sequenceOrder}: {topic.title}
-                  </span>
-                  <span className="font-bold text-charcoal tabular-nums">
-                    {avgMastery}% Mastery
-                  </span>
-                </div>
+          <div className="p-6 space-y-1">
+            <span className="font-mono text-[11px] uppercase tracking-widest text-[#2D6A4F] font-semibold block">
+              Assessment Readiness
+            </span>
+            <div className="font-editorial text-xl font-bold text-[#1A1817]">
+              {topicBreakdown.find(t => t.topic.id === 'topic-2')?.strugglingStudents.length === 0 ? 'Ready' : 'In Preparation'}
+            </div>
+            <p className="text-xs text-[#5C5549] font-mono">
+              Topic 01 & 02 ready for summative assessment
+            </p>
+          </div>
+        </div>
+      </section>
 
-                <ProgressBar value={avgMastery} target={85} size="sm" />
+      {/* 3. Main Grid: Misconception Guide on Left (65%) + Topic Breakdown on Right (35%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Misconception Catalog & Teaching Guidance (8 cols) */}
+        <section className="lg:col-span-8 bg-white rounded-xl border border-[#E0D8CC] p-6 shadow-xs space-y-6">
+          <div className="border-b border-[#E8E2D8] pb-3">
+            <h3 className="font-editorial text-xl font-bold text-[#1A1817]">
+              Detected Misconception Catalog
+            </h3>
+            <p className="text-xs text-[#7A7265] mt-0.5">
+              Psychometric error patterns flagged by the deterministic rule engine, complete with teaching guidelines.
+            </p>
+          </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-charcoal-muted pt-1">
-                  <span>Accuracy: <strong className="text-charcoal">{accuracy}%</strong> ({totalAttempts} attempts)</span>
-                  <span className={strugglingStudents.length > 0 ? 'text-rose-700 font-semibold' : ''}>
-                    {strugglingStudents.length} students below 60%
-                  </span>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Class Misconception Frequency Distribution */}
-        <Card>
-          <CardHeader
-            title="Detected Misconception Catalog"
-            subtitle="Frequency analysis of thinking errors captured by deterministic rules."
-          />
-          <CardContent className="space-y-3">
-            {sortedMisconceptions.map((item) => (
-              <div
-                key={item.code}
-                className="p-4 rounded-xl bg-canvas-subtle/50 border border-border/80 space-y-2"
-              >
+          <div className="space-y-6">
+            {topMisconceptions.map(({ key, count, data }) => (
+              <div key={key} className="p-5 rounded-lg bg-[#FAF8F5] border border-[#E8E2D8] space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs sm:text-sm font-heading font-bold text-charcoal">
-                    {item.name}
-                  </h4>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
-                    {item.count} {item.count === 1 ? 'attempt' : 'attempts'}
+                  <div className="space-y-0.5">
+                    <span className="font-mono text-[10px] uppercase font-semibold text-[#8C2828] bg-[#FFF0F0] px-2 py-0.5 rounded">
+                      Pattern Flag #{key}
+                    </span>
+                    <h4 className="font-editorial text-lg font-bold text-[#1A1817]">
+                      {data ? data.name : key}
+                    </h4>
+                  </div>
+                  <span className="font-mono text-xs font-bold text-[#8C2828] bg-white px-2.5 py-1 rounded border border-[#E8E2D8]">
+                    {count} Attempts
                   </span>
                 </div>
 
-                <p className="text-xs text-charcoal-muted leading-relaxed">
-                  <span className="font-semibold text-charcoal">Why it occurs: </span>
-                  {item.why}
-                </p>
+                <div className="text-xs text-[#5C5549] space-y-1">
+                  <div className="font-mono text-[11px] font-semibold text-[#1A1817] uppercase">Why it occurs:</div>
+                  <p className="leading-relaxed">{data ? data.description : 'Identified error.'}</p>
+                </div>
 
-                <div className="p-2.5 rounded-lg bg-surface border border-primary/20 text-xs text-charcoal leading-relaxed">
-                  <span className="font-semibold text-primary">Teacher Explanation Guideline: </span>
-                  {item.remedy}
+                {data && (
+                  <div className="p-3.5 bg-white rounded-lg border border-[#E4DDD2] space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1B4332] font-mono">
+                      <Lightbulb className="w-3.5 h-3.5" />
+                      <span>Teacher Classroom Remediation Strategy</span>
+                    </div>
+                    <p className="text-xs text-[#4A453D] leading-relaxed italic">
+                      "{data.remedialConcept}"
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Right Column: Topic Difficulty Landscape (4 cols) */}
+        <section className="lg:col-span-4 bg-white rounded-xl border border-[#E0D8CC] p-6 shadow-xs space-y-6">
+          <div className="border-b border-[#E8E2D8] pb-3">
+            <h3 className="font-editorial text-lg font-bold text-[#1A1817]">
+              Curriculum Mastery Curves
+            </h3>
+            <p className="text-xs text-[#7A7265] mt-0.5">
+              Ranked from highest to lowest class mastery.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {rankedByDifficulty.map(({ topic, avgMastery, accuracy, totalAttempts }) => (
+              <div key={topic.id} className="p-3.5 rounded-lg border border-[#EAE4D8] bg-[#FAF8F5] space-y-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="font-mono text-[10px] text-[#8C8377] font-semibold">
+                      Topic 0{topic.sequenceOrder}
+                    </span>
+                    <div className="font-editorial text-sm font-bold text-[#1A1817]">
+                      {topic.title}
+                    </div>
+                  </div>
+                  <span className="font-mono text-xs font-bold text-[#1A1817]">
+                    {avgMastery}%
+                  </span>
+                </div>
+
+                <div className="h-1.5 w-full bg-[#EAE4D8] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#1B4332] rounded-full"
+                    style={{ width: `${avgMastery}%` }}
+                  />
+                </div>
+
+                <div className="flex justify-between text-[11px] font-mono text-[#7A7265]">
+                  <span>Accuracy: {accuracy}%</span>
+                  <span>{totalAttempts} Attempts</span>
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Differentiated Instruction Cohorts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Remedial Cohort */}
-        <Card className="border-rose-200/90">
-          <CardHeader
-            title="Foundational Remedial Cohort"
-            subtitle="Students requiring targeted intervention or prerequisite review."
-            badge={
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
-                {strugglingGroup.length} Students
-              </span>
-            }
-          />
-          <div className="divide-y divide-border">
-            {strugglingGroup.map((s) => {
-              const sProg = db.getStudentProgress(s.id);
-              const avg = sProg.length > 0
-                ? Math.round(sProg.reduce((sum, p) => sum + p.masteryScore, 0) / topics.length)
-                : 0;
-
-              return (
-                <div
-                  key={s.id}
-                  className="p-4 px-5 flex items-center justify-between gap-3 text-xs hover:bg-canvas-subtle/40 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar name={s.displayName} seed={s.avatarSeed} size="sm" status="attention" />
-                    <div>
-                      <p className="font-semibold text-charcoal">{s.displayName}</p>
-                      <p className="text-[11px] text-charcoal-muted">Curriculum Mastery: {avg}%</p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => navigate(`/teacher/student/${s.id}`)}
-                    className="px-3 py-1.5 rounded-lg border border-border bg-surface hover:bg-primary hover:text-white hover:border-primary text-xs font-semibold text-charcoal transition-all"
-                  >
-                    Inspect Profile
-                  </button>
-                </div>
-              );
-            })}
           </div>
-        </Card>
-
-        {/* Enrichment Cohort */}
-        <Card className="border-emerald-200/90">
-          <CardHeader
-            title="Enrichment & Extension Cohort"
-            subtitle="Students ready for challenging word problems and advanced applications."
-            badge={
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                {advancedGroup.length} Students
-              </span>
-            }
-          />
-          <div className="divide-y divide-border">
-            {advancedGroup.map((s) => {
-              const sProg = db.getStudentProgress(s.id);
-              const avg = sProg.length > 0
-                ? Math.round(sProg.reduce((sum, p) => sum + p.masteryScore, 0) / topics.length)
-                : 0;
-
-              return (
-                <div
-                  key={s.id}
-                  className="p-4 px-5 flex items-center justify-between gap-3 text-xs hover:bg-canvas-subtle/40 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar name={s.displayName} seed={s.avatarSeed} size="sm" status="active" />
-                    <div>
-                      <p className="font-semibold text-charcoal">{s.displayName}</p>
-                      <p className="text-[11px] text-charcoal-muted">Curriculum Mastery: {avg}%</p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => navigate(`/teacher/student/${s.id}`)}
-                    className="px-3 py-1.5 rounded-lg border border-border bg-surface hover:bg-primary hover:text-white hover:border-primary text-xs font-semibold text-charcoal transition-all"
-                  >
-                    Inspect Profile
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
+        </section>
       </div>
     </div>
   );

@@ -1,16 +1,9 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { db } from '../../lib/db';
-import { StatCard } from '../../components/ui/StatCard';
-import { Card, CardHeader, CardContent, CardFooter } from '../../components/ui/Card';
-import { MasteryBadge } from '../../components/ui/MasteryBadge';
-import { StatusPill } from '../../components/ui/StatusPill';
-import { ProgressBar } from '../../components/ui/ProgressBar';
-import { Avatar } from '../../components/ui/Avatar';
 import {
   Users,
   AlertTriangle,
-  TrendingUp,
   Award,
   ArrowRight,
   ClipboardList,
@@ -19,8 +12,8 @@ import {
   ChevronRight,
   Lightbulb,
   CheckCircle2,
-  HelpCircle,
-  BarChart3
+  BookOpen,
+  ArrowUpRight
 } from 'lucide-react';
 
 export const TeacherDashboard: React.FC = () => {
@@ -31,13 +24,12 @@ export const TeacherDashboard: React.FC = () => {
   const students = db.getStudents();
   const topics = db.getTopics();
 
-  // Compute live class statistics from persistent records
+  // Compute live statistics from persistent records
   const allProgress = students.flatMap(s => db.getStudentProgress(s.id));
   const allAttempts = students.flatMap(s => db.getAttempts(s.id));
   const allInterventions = db.getTeacherInterventions();
   const pendingInterventions = allInterventions.filter(i => i.status === 'pending');
 
-  // Categorize students based on mastery and recent misconception events
   const studentSummaries = students.map(s => {
     const sProg = db.getStudentProgress(s.id);
     const avgMastery = sProg.length > 0
@@ -48,7 +40,6 @@ export const TeacherDashboard: React.FC = () => {
     const recentFlaggedAttempt = sAttempts.slice(0, 3).find(a => !a.isCorrect && a.detectedMisconception);
     const hasRecentErrors = !!recentFlaggedAttempt;
     const needsAttention = avgMastery < 55 || hasRecentErrors;
-
     const activeRec = db.getRecommendations(s.id)[0];
 
     return {
@@ -58,324 +49,329 @@ export const TeacherDashboard: React.FC = () => {
       needsAttention,
       recentFlaggedAttempt,
       activeRec,
-      progressList: sProg
+      topicProgress: sProg
     };
   });
 
-  const needingAttention = studentSummaries.filter(s => s.needsAttention);
-  const progressingWell = studentSummaries.filter(s => !s.needsAttention);
+  const strugglingStudents = studentSummaries.filter(s => s.needsAttention);
+  const readyForNextTopic = studentSummaries.filter(s => s.avgMastery >= 75);
 
-  // Topic mastery averages
   const topicStats = topics.map(t => {
-    const tProgs = allProgress.filter(p => p.topicId === t.id);
-    const avgScore = tProgs.length > 0
-      ? Math.round(tProgs.reduce((sum, p) => sum + p.masteryScore, 0) / tProgs.length)
+    const topicProgress = allProgress.filter(p => p.topicId === t.id);
+    const avg = topicProgress.length > 0
+      ? Math.round(topicProgress.reduce((sum, p) => sum + p.masteryScore, 0) / topicProgress.length)
       : 0;
-    const strugglingCount = tProgs.filter(p => p.masteryScore < 60).length;
+    const strugglingCount = topicProgress.filter(p => p.masteryScore < 60).length;
+    const masteredCount = topicProgress.filter(p => p.masteryScore >= 80).length;
+    const developingCount = topicProgress.length - strugglingCount - masteredCount;
 
     return {
       topic: t,
-      avgScore,
+      avgMastery: avg,
       strugglingCount,
-      attemptsTotal: allAttempts.filter(a => a.topicId === t.id).length
+      masteredCount,
+      developingCount: Math.max(0, developingCount)
     };
   });
 
-  const mostChallengingTopic = [...topicStats].sort((a, b) => b.strugglingCount - a.strugglingCount)[0];
+  const hardestTopic = [...topicStats].sort((a, b) => a.avgMastery - b.avgMastery)[0];
+  const recentClassAttempts = [...allAttempts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 7);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* 7.1 Welcome & Classroom Context Header */}
-      <div className="bg-surface rounded-2xl border border-border p-6 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      {/* 1. Academic Dossier Masthead */}
+      <section className="border-b border-[#E8E2D8] pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-subtle text-primary text-[11px] font-semibold mb-2">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Teacher Command · {classRoom.name}</span>
+          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-[#7A7265] mb-1.5">
+            <span>Teacher Command Dossier</span>
+            <span>·</span>
+            <span>{classRoom.name}</span>
+            <span>·</span>
+            <span>Teacher: Sunita Verma</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-charcoal tracking-tight">
-            Good morning, {teacher.displayName}
+          <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#1A1817]">
+            Instructional Overview & Action Ledger
           </h1>
-          <p className="text-xs sm:text-sm text-charcoal-muted mt-1 leading-relaxed max-w-2xl">
-            Here is how your Class 7-B students are progressing in Mathematics fractions. {needingAttention.length} students have identified concept gaps requiring intervention.
+          <p className="text-sm sm:text-base text-[#5C5549] mt-2 max-w-2xl leading-relaxed">
+            Real-time diagnostic telemetry from Class 7-B. GatiPath identifies underlying misconception patterns to help you direct targeted classroom guidance.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          <button
-            onClick={() => navigate('/teacher/students')}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover shadow-2xs transition-colors"
+        {/* Quick Action Buttons */}
+        <div className="flex items-center gap-3 shrink-0">
+          <Link
+            to="/teacher/students"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#DCD5C9] bg-white hover:bg-[#F4EFE6] text-xs font-semibold text-[#1A1817] transition-all shadow-2xs"
           >
-            <Users className="w-4 h-4" />
-            <span>Open Student Roster</span>
-          </button>
-          <button
-            onClick={() => navigate('/teacher/interventions')}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-canvas-subtle text-charcoal text-xs font-medium rounded-lg border border-border hover:bg-canvas transition-colors"
+            <span>Open Scholar Ledger ({students.length})</span>
+            <ArrowRight className="w-3.5 h-3.5 text-[#5C5549]" />
+          </Link>
+          <Link
+            to="/teacher/interventions"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#1B4332] hover:bg-[#112F23] text-xs font-medium text-white transition-all shadow-2xs"
           >
-            <ClipboardList className="w-4 h-4 text-charcoal-muted" />
-            <span>
-              Interventions ({pendingInterventions.length} pending)
-            </span>
-          </button>
+            <ClipboardList className="w-3.5 h-3.5" />
+            <span>Active Interventions ({pendingInterventions.length})</span>
+          </Link>
         </div>
-      </div>
+      </section>
 
-      {/* 7.2 Key Performance Statistics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Students Enrolled"
-          value={students.length}
-          subtext="Class 7-B Mathematics (100% active)"
-          badge={{ text: 'Active Class', variant: 'info' }}
-          icon={Users}
-          variant="default"
-          onClick={() => navigate('/teacher/students')}
-        />
+      {/* 2. Open Class Ledger Ticker (Not 4 boxed cards!) */}
+      <section className="bg-white rounded-xl border border-[#E0D8CC] shadow-xs">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#E8E2D8]">
+          <div className="p-5 sm:p-6 space-y-1">
+            <span className="font-mono text-[11px] uppercase tracking-widest text-[#7A7265] block">
+              Enrolled Scholars
+            </span>
+            <div className="text-2xl sm:text-3xl font-bold text-[#1A1817] font-mono">
+              {students.length}
+            </div>
+            <p className="text-[11px] text-[#5C5549]">
+              Active in Fractions Pilot
+            </p>
+          </div>
 
-        <StatCard
-          label="Need Guidance"
-          value={needingAttention.length}
-          subtext={`${needingAttention.length} students with flagged concept errors`}
-          badge={{ text: 'Action Needed', variant: 'danger' }}
-          icon={AlertTriangle}
-          variant="danger"
-          onClick={() => navigate('/teacher/students')}
-        />
+          <div className="p-5 sm:p-6 space-y-1 bg-[#FDF9F7]">
+            <span className="font-mono text-[11px] uppercase tracking-widest text-[#8C2828] block font-semibold">
+              Action Required
+            </span>
+            <div className="text-2xl sm:text-3xl font-bold text-[#8C2828] font-mono">
+              {strugglingStudents.length}
+            </div>
+            <p className="text-[11px] text-[#7A3E3E]">
+              Flagged with concept gaps
+            </p>
+          </div>
 
-        <StatCard
-          label="On Pace / Advanced"
-          value={progressingWell.length}
-          subtext="Demonstrating mastery & readiness for challenge"
-          badge={{ text: 'On Target', variant: 'success' }}
-          icon={TrendingUp}
-          variant="success"
-          onClick={() => navigate('/teacher/students')}
-        />
+          <div className="p-5 sm:p-6 space-y-1">
+            <span className="font-mono text-[11px] uppercase tracking-widest text-[#2D6A4F] block font-semibold">
+              Advanced Cohort
+            </span>
+            <div className="text-2xl sm:text-3xl font-bold text-[#2D6A4F] font-mono">
+              {readyForNextTopic.length}
+            </div>
+            <p className="text-[11px] text-[#5C5549]">
+              ≥75% Curriculum Mastery
+            </p>
+          </div>
 
-        <StatCard
-          label="Hardest Topic"
-          value={mostChallengingTopic ? mostChallengingTopic.topic.title.replace(' of Fractions', '') : 'Addition'}
-          subtext={`${mostChallengingTopic?.strugglingCount || 0} students currently below 60%`}
-          badge={{ text: 'Curriculum Focus', variant: 'warning' }}
-          icon={Award}
-          variant="warning"
-          onClick={() => navigate('/teacher/insights')}
-        />
-      </div>
+          <div className="p-5 sm:p-6 space-y-1">
+            <span className="font-mono text-[11px] uppercase tracking-widest text-[#C57D36] block font-semibold">
+              Class Bottleneck
+            </span>
+            <div className="text-lg sm:text-xl font-bold text-[#1A1817] font-editorial truncate">
+              {hardestTopic.topic.title}
+            </div>
+            <p className="text-[11px] text-[#5C5549] font-mono">
+              Avg Mastery: {hardestTopic.avgMastery}%
+            </p>
+          </div>
+        </div>
+      </section>
 
-      {/* Main Grid: Student Guidance (2 Cols) + Topic Mastery & Activity (1 Col) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 7.3 Students Requiring Teacher Guidance */}
-        <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader
-              title="Students Requiring Teacher Guidance"
-              subtitle="Ranked by detected misconception patterns and prerequisite bottlenecks."
-              action={
-                <Link
-                  to="/teacher/students"
-                  className="text-xs font-semibold text-primary hover:text-primary-hover flex items-center gap-1 transition-colors"
-                >
-                  <span>View All ({students.length})</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              }
-            />
-
-            <div className="divide-y divide-border">
-              {needingAttention.length === 0 ? (
-                <div className="p-8 text-center text-xs text-charcoal-muted">
-                  All students are currently progressing on pace.
-                </div>
-              ) : (
-                needingAttention.map(({ student, avgMastery, recentFlaggedAttempt, activeRec }) => {
-                  const errorTag = recentFlaggedAttempt?.detectedMisconception || activeRec?.misconceptionTag;
-                  const readableError = errorTag ? errorTag.replace(/_/g, ' ') : null;
-
-                  return (
-                    <div
-                      key={student.id}
-                      className="p-5 hover:bg-canvas-subtle/50 transition-colors flex flex-col md:flex-row md:items-start justify-between gap-4"
-                    >
-                      <div className="flex items-start gap-3.5 min-w-0">
-                        <Avatar
-                          name={student.displayName}
-                          seed={student.avatarSeed}
-                          size="md"
-                          status="attention"
-                        />
-                        <div className="min-w-0 space-y-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h4 className="text-sm font-heading font-bold text-charcoal">
-                              {student.displayName}
-                            </h4>
-                            <span className="text-xs text-charcoal-muted">·</span>
-                            <MasteryBadge score={avgMastery} size="xs" />
-                            {readableError && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-800 border border-rose-200/80 capitalize">
-                                {readableError}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Full unclipped rationale */}
-                          <p className="text-xs text-charcoal font-medium leading-relaxed">
-                            {activeRec ? activeRec.title : 'Targeted Concept Support'}
-                          </p>
-                          <p className="text-xs text-charcoal-muted leading-relaxed">
-                            {activeRec
-                              ? activeRec.explanation
-                              : 'Student requires teacher review for prerequisite concept mastery.'}
-                          </p>
-
-                          {/* Action Pill */}
-                          <div className="pt-1 flex items-center gap-2">
-                            <span className="text-[11px] text-charcoal-muted font-medium">
-                              Suggested action:
-                            </span>
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary-subtle px-2 py-0.5 rounded-md">
-                              <Lightbulb className="w-3 h-3" />
-                              <span>{activeRec?.suggestedActionLabel || 'Review Concept'}</span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="self-end md:self-start shrink-0 pt-1">
-                        <button
-                          onClick={() => navigate(`/teacher/student/${student.id}`)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-primary-subtle text-primary border border-primary/30 hover:border-primary text-xs font-semibold rounded-lg shadow-2xs transition-all"
-                        >
-                          <span>Inspect Profile</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+      {/* 3. Main Asymmetrical Layout: Casebook on Left (68%), Briefing on Right (32%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column (8 cols): Priority Action Ledger & Concept Landscape */}
+        <div className="lg:col-span-8 space-y-8">
+          {/* Priority Casebook Table */}
+          <section className="bg-white rounded-xl border border-[#E0D8CC] shadow-xs overflow-hidden">
+            <div className="p-5 border-b border-[#E8E2D8] flex items-center justify-between bg-[#FAF7F2]">
+              <div>
+                <h3 className="font-editorial text-lg font-bold text-[#1A1817]">
+                  Scholars Requiring Immediate Guidance
+                </h3>
+                <p className="text-xs text-[#7A7265] mt-0.5">
+                  Ranked by detected misconception severity and prerequisite gaps.
+                </p>
+              </div>
+              <Link
+                to="/teacher/students"
+                className="text-xs font-mono font-semibold text-[#1B4332] hover:text-[#112F23] flex items-center gap-1"
+              >
+                <span>Full Ledger</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
 
-            <CardFooter>
-              <span>Teachers retain full authority to assign or override remedial actions.</span>
-              <button
-                onClick={() => navigate('/teacher/interventions')}
-                className="font-semibold text-primary hover:underline"
-              >
-                Manage Interventions
-              </button>
-            </CardFooter>
-          </Card>
-        </div>
+            <div className="divide-y divide-[#EFEAE2]">
+              {strugglingStudents.slice(0, 5).map(({ student, avgMastery, recentFlaggedAttempt, activeRec }) => (
+                <div key={student.id} className="p-5 hover:bg-[#FAF8F5] transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="space-y-2 min-w-0">
+                      {/* Name & Roll */}
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-7 h-7 rounded-full bg-[#1A1817] text-[#FAF7F2] font-editorial font-bold text-xs flex items-center justify-center shrink-0">
+                          {student.displayName.split(' ').map(n => n[0]).join('')}
+                        </span>
+                        <div>
+                          <Link
+                            to={`/teacher/student/${student.id}`}
+                            className="font-editorial text-base font-bold text-[#1A1817] hover:text-[#1B4332] transition-colors"
+                          >
+                            {student.displayName}
+                          </Link>
+                          <span className="font-mono text-[11px] text-[#7A7265] ml-2">
+                            Roll #{String(students.findIndex(st => st.id === student.id) + 1).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded bg-[#FEEBEB] text-[#8C2828]">
+                          {avgMastery}% Mastery
+                        </span>
+                      </div>
 
-        {/* Right Col: 7.4 Class Topic Mastery + Live Student Activity Feed */}
-        <div className="space-y-6">
-          {/* Class Topic Mastery Card */}
-          <Card>
-            <CardHeader
-              title="Class Topic Mastery"
-              subtitle="Real curriculum performance across Class 7 fractions."
-              action={
-                <Link
-                  to="/teacher/insights"
-                  className="text-xs font-semibold text-primary hover:underline flex items-center gap-0.5"
-                >
-                  <span>Analytics</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              }
-            />
+                      {/* Editorial Diagnostic Diagnosis */}
+                      <div className="pl-9 space-y-1">
+                        <div className="text-xs font-medium text-[#1A1817]">
+                          {activeRec ? activeRec.title : 'Prerequisite Gap Review'}
+                        </div>
+                        <p className="text-xs text-[#5C5549] leading-relaxed italic font-serif">
+                          "{activeRec?.explanation || 'Struggling with core fraction operations. Needs targeted guidance.'}"
+                        </p>
+                      </div>
+                    </div>
 
-            <CardContent className="space-y-4">
-              {topicStats.map(({ topic, avgScore, strugglingCount, attemptsTotal }) => (
-                <div key={topic.id} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-charcoal truncate max-w-[180px]">
-                      {topic.sequenceOrder}. {topic.title}
-                    </span>
-                    <span className="font-bold text-charcoal tabular-nums">
-                      {avgScore}%
-                    </span>
-                  </div>
-
-                  <ProgressBar
-                    value={avgScore}
-                    target={85}
-                    size="sm"
-                    semantic={true}
-                  />
-
-                  <div className="flex justify-between items-center text-[10px] text-charcoal-muted">
-                    <span>{attemptsTotal} student attempts</span>
-                    <span className={strugglingCount > 0 ? 'text-amber-800 font-semibold' : 'text-charcoal-muted'}>
-                      {strugglingCount} needing support
-                    </span>
+                    {/* Action Button */}
+                    <div className="shrink-0 sm:self-center pl-9 sm:pl-0">
+                      <Link
+                        to={`/teacher/student/${student.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#DCD5C9] bg-white hover:bg-[#F2EDE4] text-xs font-medium text-[#1A1817] transition-all"
+                      >
+                        <span>Inspect Dossier</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#5C5549]" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
-            </CardContent>
+            </div>
+          </section>
 
-            <CardFooter>
+          {/* Classroom Concept Landscape */}
+          <section className="bg-white rounded-xl border border-[#E0D8CC] shadow-xs p-6 space-y-6">
+            <div className="border-b border-[#E8E2D8] pb-3 flex items-center justify-between">
+              <div>
+                <h3 className="font-editorial text-lg font-bold text-[#1A1817]">
+                  Curriculum Mastery Landscape
+                </h3>
+                <p className="text-xs text-[#7A7265] mt-0.5">
+                  Distribution of scholar understanding across the 4 core topics.
+                </p>
+              </div>
               <Link
                 to="/teacher/insights"
-                className="w-full text-center text-xs font-semibold text-primary hover:text-primary-hover flex items-center justify-center gap-1"
+                className="text-xs font-mono font-semibold text-[#1B4332] hover:text-[#112F23] flex items-center gap-1"
               >
-                <span>View Full Diagnostic Breakdown</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span>Diagnostic Breakdown</span>
+                <ChevronRight className="w-3.5 h-3.5" />
               </Link>
-            </CardFooter>
-          </Card>
+            </div>
 
-          {/* Real Recent Activity Stream */}
-          <Card>
-            <CardHeader
-              title="Recent Student Activity"
-              subtitle="Live chronological stream of classroom submissions."
-            />
+            <div className="space-y-5">
+              {topicStats.map(({ topic, avgMastery, strugglingCount, masteredCount, developingCount }) => (
+                <div key={topic.id} className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-[#7A7265]">0{topic.sequenceOrder}</span>
+                      <span className="font-editorial font-bold text-sm text-[#1A1817]">{topic.title}</span>
+                    </div>
+                    <div className="font-mono text-xs text-[#5C5549]">
+                      Average: <strong className="text-[#1A1817]">{avgMastery}%</strong>
+                    </div>
+                  </div>
 
-            <CardContent className="p-0">
-              <div className="divide-y divide-border">
-                {allAttempts.slice(0, 4).map((att) => {
-                  const student = students.find(s => s.id === att.studentId);
-                  const topic = topics.find(t => t.id === att.topicId);
+                  {/* Stacked Cohort Segment Bar */}
+                  <div className="h-3 w-full bg-[#EAE4D8] rounded-full overflow-hidden flex">
+                    <div
+                      className="bg-[#2D6A4F] h-full transition-all"
+                      style={{ width: `${(masteredCount / students.length) * 100}%` }}
+                      title={`${masteredCount} Mastered`}
+                    />
+                    <div
+                      className="bg-[#C57D36] h-full transition-all"
+                      style={{ width: `${(developingCount / students.length) * 100}%` }}
+                      title={`${developingCount} Developing`}
+                    />
+                    <div
+                      className="bg-[#8C2828] h-full transition-all"
+                      style={{ width: `${(strugglingCount / students.length) * 100}%` }}
+                      title={`${strugglingCount} Critical Gap`}
+                    />
+                  </div>
 
-                  return (
-                    <div key={att.id} className="p-3.5 px-5 flex items-center justify-between gap-3 text-xs">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
-                            att.isCorrect
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200'
-                          }`}
-                        >
-                          {att.isCorrect ? '✓' : '✗'}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-charcoal truncate">
-                            {student?.displayName || 'Student'}
-                          </p>
-                          <p className="text-[11px] text-charcoal-muted truncate">
-                            {topic?.title || 'Fractions'} · {att.timeTakenSeconds}s
-                          </p>
-                        </div>
-                      </div>
+                  <div className="flex justify-between items-center text-[10px] font-mono text-[#7A7265]">
+                    <span>{masteredCount} Mastered</span>
+                    <span>{developingCount} Developing</span>
+                    <span className="text-[#8C2828]">{strugglingCount} Need Guidance</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
 
-                      <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
-                          att.isCorrect
-                            ? 'bg-emerald-50 text-emerald-800'
-                            : 'bg-rose-50 text-rose-800'
-                        }`}
-                      >
-                        {att.isCorrect ? (att.hintUsed ? 'With Hint' : 'Independent') : 'Incorrect'}
+        {/* Right Column (4 cols): Pedagogical Briefing & Live Evidence */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Pedagogical Briefing Card */}
+          <div className="bg-[#FAF7F2] rounded-xl border border-[#DFD7CB] p-6 space-y-4">
+            <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-[#C57D36] font-semibold">
+              <Lightbulb className="w-4 h-4" />
+              <span>Instructional Briefing</span>
+            </div>
+
+            <h4 className="font-editorial text-lg font-bold text-[#1A1817]">
+              Addressing the "Denominator Addition" Trap
+            </h4>
+
+            <p className="text-xs text-[#5C5549] leading-relaxed">
+              7 of your scholars are calculating <span className="font-mono bg-[#FAF0E4] px-1 py-0.5 rounded text-[#1A1817]">1/4 + 1/4 = 2/8</span>. They treat numerator and denominator as separate independent integers.
+            </p>
+
+            <div className="p-3 bg-white rounded-lg border border-[#E6DFD3] text-xs text-[#4A453D] space-y-1">
+              <div className="font-semibold text-[#1A1817] font-mono text-[11px] uppercase">
+                Recommended Whiteboard Prompt
+              </div>
+              <p className="italic text-[#5C5549]">
+                "If you eat one slice of a 4-slice pizza, and your friend eats one slice of the same pizza, how much did you eat together? Did the pizza suddenly grow into 8 slices?"
+              </p>
+            </div>
+          </div>
+
+          {/* Chronological Observation Stream */}
+          <div className="bg-white rounded-xl border border-[#E0D8CC] p-5 space-y-4 shadow-xs">
+            <div className="border-b border-[#EFEAE2] pb-2 flex items-center justify-between">
+              <h4 className="font-editorial text-base font-bold text-[#1A1817]">
+                Live Attempt Stream
+              </h4>
+              <span className="font-mono text-[10px] text-[#7A7265]">Chronological</span>
+            </div>
+
+            <div className="divide-y divide-[#F2EDE4]">
+              {recentClassAttempts.map((attempt) => {
+                const s = students.find(st => st.id === attempt.studentId);
+                return (
+                  <div key={attempt.id} className="py-2.5 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-[#1A1817]">
+                        {s?.displayName || 'Scholar'}
+                      </span>
+                      <span className="font-mono text-[10px] text-[#8C8377]">
+                        {new Date(attempt.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+
+                    <div className="text-[11px] text-[#5C5549] flex items-center justify-between">
+                      <span>Submitted: <code className="font-mono">{attempt.submittedAnswer}</code></span>
+                      <span className={`font-mono text-[10px] font-semibold px-1.5 py-0.2 rounded ${
+                        attempt.isCorrect ? 'bg-[#E8F4EE] text-[#1B4332]' : 'bg-[#FEEBEB] text-[#8C2828]'
+                      }`}>
+                        {attempt.isCorrect ? 'Correct' : 'Misconception'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
