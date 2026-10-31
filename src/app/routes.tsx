@@ -1,8 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth/AuthContext';
-import { Navbar } from '../components/layout/Navbar';
-import { MobileNav } from '../components/layout/MobileNav';
+import { AppLayout } from '../components/layout/AppLayout';
 
 // Screens
 import { LoginScreen } from '../features/auth/LoginScreen';
@@ -17,18 +16,6 @@ import { StudentRoster } from '../features/teacher/StudentRoster';
 import { StudentDetail } from '../features/teacher/StudentDetail';
 import { ClassInsights } from '../features/teacher/ClassInsights';
 import { InterventionsList } from '../features/teacher/InterventionsList';
-
-const ProtectedLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <div className="min-h-screen bg-[#F7F8F5] pb-20 md:pb-10 flex flex-col">
-      <Navbar />
-      <main className="flex-1">
-        {children}
-      </main>
-      <MobileNav />
-    </div>
-  );
-};
 
 export const AppRoutes: React.FC = () => {
   const { isAuthenticated, isTeacher, isStudent } = useAuth();
@@ -56,49 +43,49 @@ export const AppRoutes: React.FC = () => {
       <Route
         path="/student/dashboard"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <StudentDashboard />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
       <Route
         path="/student/path"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <LearningPath />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
       <Route
         path="/student/assessments"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <AssessmentsList />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
       <Route
         path="/learn/:topicId"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <LearnScreen />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
       <Route
         path="/solve/:topicId"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <SolveScreen />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
       <Route
         path="/test/:topicId"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <TestScreen />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
 
@@ -106,41 +93,41 @@ export const AppRoutes: React.FC = () => {
       <Route
         path="/teacher/dashboard"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <TeacherDashboard />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
       <Route
         path="/teacher/students"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <StudentRoster />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
       <Route
         path="/teacher/student/:studentId"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <StudentDetail />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
       <Route
         path="/teacher/insights"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <ClassInsights />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
       <Route
         path="/teacher/interventions"
         element={
-          <ProtectedLayout>
+          <AppLayout>
             <InterventionsList />
-          </ProtectedLayout>
+          </AppLayout>
         }
       />
 

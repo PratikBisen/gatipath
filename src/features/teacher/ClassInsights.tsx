@@ -1,7 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/db';
-import { MasteryBadge } from '../../components/ui/MasteryBadge';
+import { Card, CardHeader, CardContent } from '../../components/ui/Card';
+import { StatCard } from '../../components/ui/StatCard';
+import { ProgressBar } from '../../components/ui/ProgressBar';
+import { Avatar } from '../../components/ui/Avatar';
 import { MISCONCEPTIONS } from '../../data/curriculum/fractions';
 import {
   Compass,
@@ -10,7 +13,10 @@ import {
   Award,
   Users,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  BarChart3,
+  Lightbulb,
+  CheckCircle2
 } from 'lucide-react';
 
 export const ClassInsights: React.FC = () => {
@@ -18,36 +24,36 @@ export const ClassInsights: React.FC = () => {
 
   const students = db.getStudents();
   const topics = db.getTopics();
-  const allProgress = students.flatMap(s => db.getStudentProgress(s.id));
-  const allAttempts = students.flatMap(s => db.getAttempts(s.id));
+  const allProgress = students.flatMap((s) => db.getStudentProgress(s.id));
+  const allAttempts = students.flatMap((s) => db.getAttempts(s.id));
 
   // 1. Topic Performance Aggregation
-  const topicBreakdown = topics.map(topic => {
-    const progs = allProgress.filter(p => p.topicId === topic.id);
+  const topicBreakdown = topics.map((topic) => {
+    const progs = allProgress.filter((p) => p.topicId === topic.id);
     const avg = progs.length > 0
       ? Math.round(progs.reduce((sum, p) => sum + p.masteryScore, 0) / progs.length)
       : 0;
 
-    const topicAttempts = allAttempts.filter(a => a.topicId === topic.id);
-    const correctCount = topicAttempts.filter(a => a.isCorrect).length;
+    const topicAttempts = allAttempts.filter((a) => a.topicId === topic.id);
+    const correctCount = topicAttempts.filter((a) => a.isCorrect).length;
     const accuracy = topicAttempts.length > 0
       ? Math.round((correctCount / topicAttempts.length) * 100)
       : 0;
 
-    const strugglingStudents = progs.filter(p => p.masteryScore < 60).map(p => {
-      return students.find(s => s.id === p.studentId);
-    }).filter(Boolean);
+    const strugglingStudents = progs
+      .filter((p) => p.masteryScore < 60)
+      .map((p) => students.find((s) => s.id === p.studentId))
+      .filter(Boolean);
 
     return {
       topic,
       avgMastery: avg,
       accuracy,
       totalAttempts: topicAttempts.length,
-      strugglingStudents
+      strugglingStudents,
     };
   });
 
-  // Sort topics by difficulty (lowest mastery = hardest)
   const rankedByDifficulty = [...topicBreakdown].sort((a, b) => a.avgMastery - b.avgMastery);
 
   // 2. Class Misconception Frequency Distribution
@@ -64,12 +70,12 @@ export const ClassInsights: React.FC = () => {
       count,
       name: MISCONCEPTIONS[code]?.name || code.replace(/_/g, ' '),
       why: MISCONCEPTIONS[code]?.whyItHappens || '',
-      remedy: MISCONCEPTIONS[code]?.remedialConcept || ''
+      remedy: MISCONCEPTIONS[code]?.remedialConcept || '',
     }))
     .sort((a, b) => b.count - a.count);
 
   // 3. Student Grouping: Struggling vs Advanced
-  const strugglingGroup = students.filter(s => {
+  const strugglingGroup = students.filter((s) => {
     const sProgs = db.getStudentProgress(s.id);
     const avg = sProgs.length > 0
       ? sProgs.reduce((acc, p) => acc + p.masteryScore, 0) / topics.length
@@ -77,7 +83,7 @@ export const ClassInsights: React.FC = () => {
     return avg < 55;
   });
 
-  const advancedGroup = students.filter(s => {
+  const advancedGroup = students.filter((s) => {
     const sProgs = db.getStudentProgress(s.id);
     const avg = sProgs.length > 0
       ? sProgs.reduce((acc, p) => acc + p.masteryScore, 0) / topics.length
@@ -86,192 +92,207 @@ export const ClassInsights: React.FC = () => {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Header */}
       <div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-subtle text-primary text-xs font-semibold mb-2">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-subtle text-primary text-[11px] font-semibold mb-2">
           <Compass className="w-3.5 h-3.5" />
-          <span>Class Diagnostics & Analytics</span>
+          <span>Diagnostic Analytics & Insights</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-charcoal">
-          Class 7-B Insights
+        <h1 className="text-2xl sm:text-3xl font-heading font-extrabold text-charcoal tracking-tight">
+          Class 7-B Learning Analytics
         </h1>
-        <p className="text-sm text-charcoal-muted mt-1">
-          Evidence-based learning analytics derived directly from student response attempts and curriculum progressions.
+        <p className="text-xs sm:text-sm text-charcoal-muted mt-1 leading-relaxed">
+          Aggregated learning evidence derived directly from student response attempts and prerequisite mastery.
         </p>
       </div>
 
-      {/* Top 3 Metric Callouts */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="bg-white p-5 rounded-xl border border-borderSoft shadow-card space-y-1">
-          <span className="text-xs font-semibold uppercase tracking-wider text-charcoal-muted">
-            Hardest Curriculum Step
-          </span>
-          <h3 className="text-lg font-bold font-heading text-charcoal truncate">
-            {rankedByDifficulty[0]?.topic.title || 'Addition & Subtraction'}
-          </h3>
-          <p className="text-xs text-rose-700 font-medium">
-            Class Average: {rankedByDifficulty[0]?.avgMastery || 0}% ({rankedByDifficulty[0]?.strugglingStudents.length || 0} students needing help)
-          </p>
-        </div>
+      {/* Top 3 Metric Callout Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          label="Hardest Curriculum Step"
+          value={rankedByDifficulty[0]?.topic.title.replace(' of Fractions', '') || 'Addition'}
+          subtext={`Class Average: ${rankedByDifficulty[0]?.avgMastery || 0}% (${rankedByDifficulty[0]?.strugglingStudents.length || 0} students needing help)`}
+          badge={{ text: 'Challenging', variant: 'danger' }}
+          icon={AlertTriangle}
+          variant="danger"
+        />
 
-        <div className="bg-white p-5 rounded-xl border border-borderSoft shadow-card space-y-1">
-          <span className="text-xs font-semibold uppercase tracking-wider text-charcoal-muted">
-            Most Frequent Misconception
-          </span>
-          <h3 className="text-lg font-bold font-heading text-charcoal truncate">
-            {sortedMisconceptions[0]?.name || 'Denominator Addition Error'}
-          </h3>
-          <p className="text-xs text-amber-800 font-medium">
-            Recorded {sortedMisconceptions[0]?.count || 0} times across class attempts
-          </p>
-        </div>
+        <StatCard
+          label="Top Misconception"
+          value={sortedMisconceptions[0]?.name || 'Denominator Addition Error'}
+          subtext={`Recorded ${sortedMisconceptions[0]?.count || 0} times across class attempts`}
+          badge={{ text: 'Frequent', variant: 'warning' }}
+          icon={Award}
+          variant="warning"
+        />
 
-        <div className="bg-white p-5 rounded-xl border border-borderSoft shadow-card space-y-1">
-          <span className="text-xs font-semibold uppercase tracking-wider text-charcoal-muted">
-            Students Ready for Enrichment
-          </span>
-          <h3 className="text-lg font-bold font-heading text-primary">
-            {advancedGroup.length} of {students.length} Students
-          </h3>
-          <p className="text-xs text-charcoal-muted">
-            Demonstrating ≥ 75% curriculum mastery
-          </p>
-        </div>
+        <StatCard
+          label="Ready for Enrichment"
+          value={`${advancedGroup.length} of ${students.length}`}
+          subtext="Students demonstrating ≥ 75% curriculum mastery"
+          badge={{ text: 'Enrichment', variant: 'success' }}
+          icon={TrendingUp}
+          variant="success"
+        />
       </div>
 
-      {/* Grid: Misconceptions Frequency & Student Groupings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Misconceptions Table */}
-        <div className="bg-white rounded-xl border border-borderSoft p-6 shadow-card space-y-4">
-          <div>
-            <h2 className="text-base font-heading font-bold text-charcoal">
-              Class-Wide Misconception Catalog
-            </h2>
-            <p className="text-xs text-charcoal-muted mt-0.5">
-              Specific thinking errors detected by deterministic evaluation rules.
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            {sortedMisconceptions.map(item => (
-              <div
-                key={item.code}
-                className="p-4 bg-canvas rounded-lg border border-borderSoft space-y-2"
-              >
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-charcoal">
-                    {item.name}
-                  </h4>
-                  <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-bold text-xs">
-                    {item.count} attempts
+      {/* Main Grid: Topic Performance Breakdown (Left) & Misconceptions Catalog (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Topic-Wise Breakdown */}
+        <Card>
+          <CardHeader
+            title="Curriculum Performance by Topic"
+            subtitle="Sequential mastery distribution and student success rates."
+          />
+          <CardContent className="space-y-5">
+            {topicBreakdown.map(({ topic, avgMastery, accuracy, totalAttempts, strugglingStudents }) => (
+              <div key={topic.id} className="p-4 rounded-xl bg-canvas-subtle/50 border border-border/80 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-heading font-bold text-charcoal">
+                    Topic {topic.sequenceOrder}: {topic.title}
+                  </span>
+                  <span className="font-bold text-charcoal tabular-nums">
+                    {avgMastery}% Mastery
                   </span>
                 </div>
+
+                <ProgressBar value={avgMastery} target={85} size="sm" />
+
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-charcoal-muted pt-1">
+                  <span>Accuracy: <strong className="text-charcoal">{accuracy}%</strong> ({totalAttempts} attempts)</span>
+                  <span className={strugglingStudents.length > 0 ? 'text-rose-700 font-semibold' : ''}>
+                    {strugglingStudents.length} students below 60%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Class Misconception Frequency Distribution */}
+        <Card>
+          <CardHeader
+            title="Detected Misconception Catalog"
+            subtitle="Frequency analysis of thinking errors captured by deterministic rules."
+          />
+          <CardContent className="space-y-3">
+            {sortedMisconceptions.map((item) => (
+              <div
+                key={item.code}
+                className="p-4 rounded-xl bg-canvas-subtle/50 border border-border/80 space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs sm:text-sm font-heading font-bold text-charcoal">
+                    {item.name}
+                  </h4>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
+                    {item.count} {item.count === 1 ? 'attempt' : 'attempts'}
+                  </span>
+                </div>
+
                 <p className="text-xs text-charcoal-muted leading-relaxed">
                   <span className="font-semibold text-charcoal">Why it occurs: </span>
                   {item.why}
                 </p>
-                <p className="text-xs text-primary leading-relaxed bg-white p-2.5 rounded border border-primary/20">
-                  <span className="font-semibold">Recommended Teacher Explanation: </span>
+
+                <div className="p-2.5 rounded-lg bg-surface border border-primary/20 text-xs text-charcoal leading-relaxed">
+                  <span className="font-semibold text-primary">Teacher Explanation Guideline: </span>
                   {item.remedy}
-                </p>
+                </div>
               </div>
             ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Student Groupings for Differentiated Instruction */}
-        <div className="space-y-6">
-          {/* Needing Support Group */}
-          <div className="bg-white rounded-xl border border-rose-200/80 p-6 shadow-card space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-heading font-bold text-rose-900 flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-rose-700" />
-                  <span>Foundational Remedial Group</span>
-                </h3>
-                <p className="text-xs text-rose-800/80 mt-0.5">
-                  Students requiring targeted intervention or prerequisite revision.
-                </p>
-              </div>
-              <span className="text-xs font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800">
-                {strugglingGroup.length} students
+      {/* Differentiated Instruction Cohorts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Remedial Cohort */}
+        <Card className="border-rose-200/90">
+          <CardHeader
+            title="Foundational Remedial Cohort"
+            subtitle="Students requiring targeted intervention or prerequisite review."
+            badge={
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
+                {strugglingGroup.length} Students
               </span>
-            </div>
+            }
+          />
+          <div className="divide-y divide-border">
+            {strugglingGroup.map((s) => {
+              const sProg = db.getStudentProgress(s.id);
+              const avg = sProg.length > 0
+                ? Math.round(sProg.reduce((sum, p) => sum + p.masteryScore, 0) / topics.length)
+                : 0;
 
-            <div className="divide-y divide-borderSoft">
-              {strugglingGroup.map(s => {
-                const sProg = db.getStudentProgress(s.id);
-                const avg = sProg.length > 0
-                  ? Math.round(sProg.reduce((sum, p) => sum + p.masteryScore, 0) / topics.length)
-                  : 0;
-
-                return (
-                  <div
-                    key={s.id}
-                    className="py-3 first:pt-0 last:pb-0 flex items-center justify-between"
-                  >
+              return (
+                <div
+                  key={s.id}
+                  className="p-4 px-5 flex items-center justify-between gap-3 text-xs hover:bg-canvas-subtle/40 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar name={s.displayName} seed={s.avatarSeed} size="sm" status="attention" />
                     <div>
-                      <h5 className="text-xs font-semibold text-charcoal">{s.displayName}</h5>
-                      <span className="text-[11px] text-charcoal-muted">Overall: {avg}%</span>
+                      <p className="font-semibold text-charcoal">{s.displayName}</p>
+                      <p className="text-[11px] text-charcoal-muted">Curriculum Mastery: {avg}%</p>
                     </div>
-                    <button
-                      onClick={() => navigate(`/teacher/student/${s.id}`)}
-                      className="px-2.5 py-1 text-xs font-medium rounded border border-borderSoft bg-canvas hover:bg-white text-charcoal"
-                    >
-                      Inspect Profile
-                    </button>
                   </div>
-                );
-              })}
-            </div>
-          </div>
 
-          {/* Advanced / Enrichment Group */}
-          <div className="bg-white rounded-xl border border-emerald-200/80 p-6 shadow-card space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-heading font-bold text-emerald-900 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-emerald-700" />
-                  <span>Enrichment & Extension Group</span>
-                </h3>
-                <p className="text-xs text-emerald-800/80 mt-0.5">
-                  Students ready for challenging word problems and multi-step fraction arithmetic.
-                </p>
-              </div>
-              <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                {advancedGroup.length} students
+                  <button
+                    onClick={() => navigate(`/teacher/student/${s.id}`)}
+                    className="px-3 py-1.5 rounded-lg border border-border bg-surface hover:bg-primary hover:text-white hover:border-primary text-xs font-semibold text-charcoal transition-all"
+                  >
+                    Inspect Profile
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+
+        {/* Enrichment Cohort */}
+        <Card className="border-emerald-200/90">
+          <CardHeader
+            title="Enrichment & Extension Cohort"
+            subtitle="Students ready for challenging word problems and advanced applications."
+            badge={
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                {advancedGroup.length} Students
               </span>
-            </div>
+            }
+          />
+          <div className="divide-y divide-border">
+            {advancedGroup.map((s) => {
+              const sProg = db.getStudentProgress(s.id);
+              const avg = sProg.length > 0
+                ? Math.round(sProg.reduce((sum, p) => sum + p.masteryScore, 0) / topics.length)
+                : 0;
 
-            <div className="divide-y divide-borderSoft">
-              {advancedGroup.map(s => {
-                const sProg = db.getStudentProgress(s.id);
-                const avg = sProg.length > 0
-                  ? Math.round(sProg.reduce((sum, p) => sum + p.masteryScore, 0) / topics.length)
-                  : 0;
-
-                return (
-                  <div
-                    key={s.id}
-                    className="py-3 first:pt-0 last:pb-0 flex items-center justify-between"
-                  >
+              return (
+                <div
+                  key={s.id}
+                  className="p-4 px-5 flex items-center justify-between gap-3 text-xs hover:bg-canvas-subtle/40 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar name={s.displayName} seed={s.avatarSeed} size="sm" status="active" />
                     <div>
-                      <h5 className="text-xs font-semibold text-charcoal">{s.displayName}</h5>
-                      <span className="text-[11px] text-charcoal-muted">Overall: {avg}%</span>
+                      <p className="font-semibold text-charcoal">{s.displayName}</p>
+                      <p className="text-[11px] text-charcoal-muted">Curriculum Mastery: {avg}%</p>
                     </div>
-                    <button
-                      onClick={() => navigate(`/teacher/student/${s.id}`)}
-                      className="px-2.5 py-1 text-xs font-medium rounded border border-borderSoft bg-canvas hover:bg-white text-charcoal"
-                    >
-                      Inspect Profile
-                    </button>
                   </div>
-                );
-              })}
-            </div>
+
+                  <button
+                    onClick={() => navigate(`/teacher/student/${s.id}`)}
+                    className="px-3 py-1.5 rounded-lg border border-border bg-surface hover:bg-primary hover:text-white hover:border-primary text-xs font-semibold text-charcoal transition-all"
+                  >
+                    Inspect Profile
+                  </button>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

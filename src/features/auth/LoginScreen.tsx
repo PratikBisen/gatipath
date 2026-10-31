@@ -49,10 +49,10 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8F5] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-canvas flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         {/* Brand Wordmark & Icon */}
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary text-white font-bold text-2xl shadow-sm mb-3">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary text-white font-heading font-extrabold text-2xl shadow-card mb-3">
           G
         </div>
         <h1 className="text-3xl font-heading font-extrabold text-charcoal tracking-tight">
@@ -64,26 +64,26 @@ export const LoginScreen: React.FC = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-        <div className="bg-white py-8 px-6 sm:px-10 rounded-2xl border border-borderSoft shadow-card space-y-6">
+        <div className="bg-surface py-8 px-6 sm:px-10 rounded-2xl border border-border shadow-card space-y-6">
           {/* Quick 1-Click Demo Account Switcher */}
-          <div className="p-4 bg-canvas rounded-xl border border-borderSoft space-y-3">
+          <div className="p-4 bg-canvas-subtle rounded-xl border border-border space-y-3">
             <div className="flex items-center gap-1.5 text-xs font-bold text-charcoal-muted uppercase tracking-wider">
               <ShieldCheck className="w-4 h-4 text-primary" />
               <span>Instant Hackathon Evaluation Access</span>
             </div>
             <p className="text-xs text-charcoal-muted leading-relaxed">
-              Click either demo profile below to instantly experience GatiPath with realistic seeded records:
+              Click either persona below to test GatiPath with persistent demonstration records:
             </p>
 
             <div className="grid grid-cols-2 gap-3 pt-1">
               <button
                 type="button"
                 onClick={() => handleDemoQuickLogin('student')}
-                className="p-3 bg-white rounded-lg border border-primary/30 hover:border-primary text-left transition-all hover:shadow-xs group"
+                className="p-3 bg-surface rounded-xl border border-border hover:border-primary/60 text-left transition-all hover:shadow-2xs group"
               >
                 <div className="flex items-center gap-2 mb-1">
                   <GraduationCap className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold text-charcoal group-hover:text-primary">
+                  <span className="text-xs font-bold text-charcoal group-hover:text-primary transition-colors">
                     Aarav (Student)
                   </span>
                 </div>
@@ -95,11 +95,11 @@ export const LoginScreen: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleDemoQuickLogin('teacher')}
-                className="p-3 bg-white rounded-lg border border-primary/30 hover:border-primary text-left transition-all hover:shadow-xs group"
+                className="p-3 bg-surface rounded-xl border border-border hover:border-primary/60 text-left transition-all hover:shadow-2xs group"
               >
                 <div className="flex items-center gap-2 mb-1">
                   <Users className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold text-charcoal group-hover:text-primary">
+                  <span className="text-xs font-bold text-charcoal group-hover:text-primary transition-colors">
                     Sunita (Teacher)
                   </span>
                 </div>
@@ -112,10 +112,10 @@ export const LoginScreen: React.FC = () => {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-borderSoft" />
+              <div className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-charcoal-muted font-semibold tracking-wider">
+              <span className="bg-surface px-3 text-charcoal-muted font-bold tracking-wider text-[10px]">
                 Or Sign In Manually
               </span>
             </div>
@@ -130,13 +130,13 @@ export const LoginScreen: React.FC = () => {
             )}
 
             {/* Role Tab */}
-            <div className="grid grid-cols-2 gap-1 p-1 bg-canvas rounded-lg border border-borderSoft text-xs">
+            <div className="grid grid-cols-2 gap-1 p-1 bg-canvas-subtle rounded-lg border border-border text-xs">
               <button
                 type="button"
                 onClick={() => setSelectedRole('student')}
                 className={`py-2 rounded-md font-semibold transition-colors ${
                   selectedRole === 'student'
-                    ? 'bg-white text-primary shadow-xs'
+                    ? 'bg-surface text-primary shadow-2xs'
                     : 'text-charcoal-muted'
                 }`}
               >
@@ -147,7 +147,7 @@ export const LoginScreen: React.FC = () => {
                 onClick={() => setSelectedRole('teacher')}
                 className={`py-2 rounded-md font-semibold transition-colors ${
                   selectedRole === 'teacher'
-                    ? 'bg-white text-primary shadow-xs'
+                    ? 'bg-surface text-primary shadow-2xs'
                     : 'text-charcoal-muted'
                 }`}
               >
@@ -164,7 +164,7 @@ export const LoginScreen: React.FC = () => {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder={selectedRole === 'student' ? 'student@gatipath.demo' : 'teacher@gatipath.demo'}
-                className="w-full p-2.5 text-xs rounded-lg border border-borderSoft bg-canvas text-charcoal focus:border-primary focus:bg-white outline-none transition-colors"
+                className="w-full p-2.5 text-xs rounded-lg border border-border bg-canvas-subtle text-charcoal focus:border-primary focus:bg-white outline-none transition-colors"
                 required
               />
             </div>
@@ -178,7 +178,7 @@ export const LoginScreen: React.FC = () => {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full p-2.5 text-xs rounded-lg border border-borderSoft bg-canvas text-charcoal focus:border-primary focus:bg-white outline-none transition-colors"
+                className="w-full p-2.5 text-xs rounded-lg border border-border bg-canvas-subtle text-charcoal focus:border-primary focus:bg-white outline-none transition-colors"
               />
               <span className="block text-[11px] text-charcoal-muted mt-1">
                 Any password accepted for demonstration mode.
@@ -187,7 +187,7 @@ export const LoginScreen: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 px-4 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover shadow-sm transition-colors flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 px-4 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary-hover shadow-2xs transition-colors flex items-center justify-center gap-1.5"
             >
               <span>Sign In</span>
               <ArrowRight className="w-4 h-4" />
@@ -197,7 +197,7 @@ export const LoginScreen: React.FC = () => {
 
         {/* Footer Note */}
         <div className="mt-6 text-center text-xs text-charcoal-muted">
-          <p>Class 7 Mathematics Pilot · Fraction Arithmetic & Prerequisite Modeling</p>
+          <p>Class 7 Mathematics Pilot · Fraction Arithmetic & Adaptive Pacing</p>
         </div>
       </div>
     </div>

@@ -15,7 +15,6 @@ import {
   HelpCircle,
   CheckCircle2,
   XCircle,
-  Sparkles,
   BarChart2,
   Clock,
   BookOpen
@@ -42,7 +41,6 @@ export const SolveScreen: React.FC = () => {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
 
-  // Load questions and student history for this topic
   useEffect(() => {
     const qList = db.getQuestions(topic.id);
     const prevAttempts = db.getAttempts(student.id, topic.id);
@@ -52,7 +50,6 @@ export const SolveScreen: React.FC = () => {
     setAttempts(prevAttempts);
     setProgress(currProg);
 
-    // Pick initial question
     const nextQ = selectNextQuestion(qList, prevAttempts);
     setCurrentQuestion(nextQ);
     setQuestionStartTime(Date.now());
@@ -64,7 +61,6 @@ export const SolveScreen: React.FC = () => {
     const timeTaken = Math.max(3, Math.round((Date.now() - questionStartTime) / 1000));
     const result = evaluateStudentAnswer(currentQuestion, selectedOptionId, hintUsed);
 
-    // Save attempt to database and update mastery
     const { attempt, updatedProgress } = db.recordAttempt({
       studentId: student.id,
       questionId: currentQuestion.id,
@@ -92,14 +88,12 @@ export const SolveScreen: React.FC = () => {
   };
 
   const handleNextQuestion = () => {
-    // Reset interaction state
     setSelectedOptionId('');
     setIsSubmitted(false);
     setEvaluation(null);
     setHintUsed(false);
     setShowHintBox(false);
 
-    // Pick next question adaptively based on latest attempts
     const latestAttempts = db.getAttempts(student.id, topic.id);
     const nextQ = selectNextQuestion(availableQuestions, latestAttempts);
     setCurrentQuestion(nextQ);
@@ -108,8 +102,8 @@ export const SolveScreen: React.FC = () => {
 
   if (!currentQuestion) {
     return (
-      <div className="max-w-2xl mx-auto py-12 text-center">
-        <p className="text-charcoal-muted">Loading adaptive practice session...</p>
+      <div className="max-w-2xl mx-auto py-12 text-center text-xs text-charcoal-muted">
+        Loading adaptive practice session...
       </div>
     );
   }
@@ -117,7 +111,7 @@ export const SolveScreen: React.FC = () => {
   const currentMastery = progress ? progress.masteryScore : 0;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Top Header & Breadcrumb */}
       <div className="flex items-center justify-between">
         <button
@@ -131,38 +125,38 @@ export const SolveScreen: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(`/learn/${topic.id}`)}
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
           >
             <BookOpen className="w-3.5 h-3.5" />
             <span>Read Concept Lesson</span>
           </button>
-          <MasteryBadge score={currentMastery} size="sm" />
+          <MasteryBadge score={currentMastery} size="xs" />
         </div>
       </div>
 
       {/* Question Card */}
-      <div className="bg-white rounded-2xl border border-borderSoft p-6 sm:p-8 shadow-card space-y-6">
+      <div className="bg-surface rounded-2xl border border-border p-6 sm:p-8 shadow-card space-y-6">
         {/* Meta Bar */}
-        <div className="flex items-center justify-between pb-3 border-b border-borderSoft text-xs text-charcoal-muted">
+        <div className="flex items-center justify-between pb-3 border-b border-border text-xs text-charcoal-muted">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-charcoal">{topic.title}</span>
+            <span className="font-bold text-charcoal">{topic.title}</span>
             <span>·</span>
             <span
-              className={`font-medium px-2 py-0.5 rounded-full capitalize ${
+              className={`font-semibold px-2 py-0.5 rounded-full capitalize text-[11px] ${
                 currentQuestion.difficulty === 'easy'
-                  ? 'bg-emerald-50 text-emerald-800'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                   : currentQuestion.difficulty === 'medium'
-                  ? 'bg-amber-50 text-amber-800'
-                  : 'bg-indigo-50 text-indigo-800'
+                  ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                  : 'bg-indigo-50 text-indigo-800 border border-indigo-200'
               }`}
             >
               {currentQuestion.difficulty} Level
             </span>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 text-xs">
             <BarChart2 className="w-3.5 h-3.5 text-primary" />
-            <span className="font-medium">Mastery: {currentMastery}%</span>
+            <span className="font-semibold text-charcoal tabular-nums">Mastery: {currentMastery}%</span>
           </div>
         </div>
 
@@ -172,9 +166,9 @@ export const SolveScreen: React.FC = () => {
             {currentQuestion.questionText}
           </h2>
 
-          {/* Optional Visual Representation */}
+          {/* Visual Model */}
           {currentQuestion.visualModel && (
-            <div className="mt-4 p-4 bg-canvas rounded-xl border border-borderSoft flex justify-center">
+            <div className="mt-4 p-4 bg-canvas-subtle rounded-xl border border-border flex justify-center">
               {currentQuestion.visualModel.type === 'fraction_bar' ? (
                 <FractionBar
                   totalParts={currentQuestion.visualModel.totalParts}
@@ -193,20 +187,20 @@ export const SolveScreen: React.FC = () => {
         </div>
 
         {/* Options Selection */}
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {currentQuestion.options?.map(option => {
             const isSelected = selectedOptionId === option.id;
             const isCorrectOption = option.id === currentQuestion.correctAnswer;
 
-            let optionStyle = 'bg-white border-borderSoft hover:border-primary/50 text-charcoal';
+            let optionStyle = 'bg-surface border-border hover:border-primary/50 text-charcoal';
 
             if (isSubmitted) {
               if (isCorrectOption) {
-                optionStyle = 'bg-emerald-50 border-emerald-500 text-emerald-950 font-medium';
+                optionStyle = 'bg-emerald-50/80 border-emerald-500 text-emerald-950 font-medium';
               } else if (isSelected && !evaluation?.isCorrect) {
-                optionStyle = 'bg-rose-50 border-rose-500 text-rose-950';
+                optionStyle = 'bg-rose-50/80 border-rose-500 text-rose-950';
               } else {
-                optionStyle = 'bg-canvas border-borderSoft text-charcoal-muted opacity-60';
+                optionStyle = 'bg-canvas-subtle/50 border-border text-charcoal-muted opacity-60';
               }
             } else if (isSelected) {
               optionStyle = 'bg-primary-subtle border-primary text-primary font-medium';
@@ -221,10 +215,10 @@ export const SolveScreen: React.FC = () => {
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border shrink-0 ${
                       isSelected
                         ? 'border-primary bg-primary text-white'
-                        : 'border-borderSoft bg-canvas text-charcoal-muted'
+                        : 'border-border bg-canvas-subtle text-charcoal-muted'
                     }`}
                   >
                     {option.id.replace('opt-', '').toUpperCase()}
@@ -245,7 +239,7 @@ export const SolveScreen: React.FC = () => {
 
         {/* Hint Section */}
         {!isSubmitted && (
-          <div className="pt-2">
+          <div className="pt-1">
             {!showHintBox ? (
               <button
                 onClick={() => {
@@ -272,9 +266,9 @@ export const SolveScreen: React.FC = () => {
           </div>
         )}
 
-        {/* Evaluation Feedback Box */}
+        {/* Evaluation Feedback */}
         {isSubmitted && evaluation && (
-          <div className="space-y-4 pt-2 border-t border-borderSoft">
+          <div className="space-y-4 pt-3 border-t border-border">
             <div
               className={`p-4 rounded-xl border flex items-start gap-3 ${
                 evaluation.isCorrect
@@ -313,20 +307,20 @@ export const SolveScreen: React.FC = () => {
         )}
 
         {/* Footer Actions */}
-        <div className="pt-4 flex items-center justify-between">
+        <div className="pt-4 flex items-center justify-between border-t border-border/80">
           <span className="text-xs text-charcoal-muted flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            <span>Target: Take your time to calculate accurately</span>
+            <span>Take your time to calculate accurately</span>
           </span>
 
           {!isSubmitted ? (
             <button
               onClick={handleSubmit}
               disabled={!selectedOptionId}
-              className={`px-6 py-2.5 text-sm font-semibold rounded-lg shadow-sm transition-all ${
+              className={`px-6 py-2.5 text-xs font-semibold rounded-lg shadow-2xs transition-all ${
                 selectedOptionId
                   ? 'bg-primary text-white hover:bg-primary-hover'
-                  : 'bg-canvas text-charcoal-muted border border-borderSoft cursor-not-allowed'
+                  : 'bg-canvas-subtle text-charcoal-muted border border-border cursor-not-allowed'
               }`}
             >
               Submit Answer
@@ -334,7 +328,7 @@ export const SolveScreen: React.FC = () => {
           ) : (
             <button
               onClick={handleNextQuestion}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover shadow-sm transition-all"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover shadow-2xs transition-all"
             >
               <span>Next Adaptive Question</span>
               <ArrowRight className="w-4 h-4" />
