@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { db } from '../../lib/db';
 import { StudentTopicProgress, Attempt, Recommendation, TeacherIntervention, InterventionType } from '../../types';
 import { detectRepeatedMisconceptions } from '../../engine/misconceptions';
+import { ENGINE_CONFIG } from '../../engine/config';
 import { MISCONCEPTIONS } from '../../data/curriculum/fractions';
 import {
   ArrowLeft,
@@ -223,7 +224,7 @@ export const StudentDetail: React.FC = () => {
                     </h3>
                   </div>
                   <span className={`font-mono text-xs font-semibold px-2 py-0.5 rounded ${
-                    score >= 80 ? 'bg-[#E8F4EE] text-[#1B4332]' : 'bg-[#FAF1E4] text-[#C57D36]'
+                    score >= ENGINE_CONFIG.THRESHOLDS.MASTERED ? 'bg-[#E8F4EE] text-[#1B4332]' : 'bg-[#FAF1E4] text-[#C57D36]'
                   }`}>
                     {score}% Mastery
                   </span>

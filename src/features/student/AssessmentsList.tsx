@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { db } from '../../lib/db';
+import { ENGINE_CONFIG } from '../../engine/config';
 import { Award, ArrowRight, Check, Lock } from 'lucide-react';
 
 export const AssessmentsList: React.FC = () => {
@@ -26,13 +27,13 @@ export const AssessmentsList: React.FC = () => {
           <span>·</span>
           <span>Formal Diagnostic Evaluations</span>
           <span>·</span>
-          <span>80% Mastery Requirement</span>
+          <span>{ENGINE_CONFIG.THRESHOLDS.ASSESSMENT_PASS}% Mastery Requirement</span>
         </div>
         <h1 className="font-editorial text-3xl sm:text-4xl font-bold tracking-tight text-[#1A1817]">
           Curriculum Topic Assessments
         </h1>
         <p className="text-sm sm:text-base text-[#5C5549] mt-2 leading-relaxed">
-          Summative assessments do not offer hints. Passing an assessment ($\ge 80\%$) with demonstrated independent success formally certifies topic mastery on your academic record.
+          Summative assessments do not offer hints. Passing an assessment ($\ge {ENGINE_CONFIG.THRESHOLDS.ASSESSMENT_PASS}\%$) with demonstrated independent success formally certifies topic mastery on your academic record.
         </p>
       </section>
 
@@ -42,7 +43,7 @@ export const AssessmentsList: React.FC = () => {
           const prog = progressMap[topic.id];
           const mastery = prog ? prog.masteryScore : 0;
           const isMastered = prog?.status === 'mastered';
-          const isReady = mastery >= 60;
+          const isReady = prog?.status === 'ready_for_test' || isMastered || mastery >= ENGINE_CONFIG.THRESHOLDS.PREREQUISITE_MINIMUM;
           const lastScore = prog?.lastAssessmentScore;
 
           return (

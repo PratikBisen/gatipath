@@ -9,6 +9,7 @@ import {
 import { TOPICS, QUESTIONS } from '../../data/curriculum/fractions';
 import { calculateNewMastery, determineTopicStatus } from '../../engine/mastery';
 import { generateAdaptiveRecommendation } from '../../engine/recommendation';
+import { ENGINE_CONFIG } from '../../engine/config';
 
 const STORAGE_KEYS = {
   STUDENTS: 'gatipath_students',
@@ -43,7 +44,7 @@ class DatabaseRepository {
   }
 
   private loadFromStorage<T>(key: string, defaultValue: T): T {
-    if (typeof window === 'undefined') return defaultValue;
+    if (typeof localStorage === 'undefined') return defaultValue;
     try {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
@@ -54,7 +55,7 @@ class DatabaseRepository {
   }
 
   private saveToStorage<T>(key: string, value: T): void {
-    if (typeof window === 'undefined') return;
+    if (typeof localStorage === 'undefined') return;
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (e) {
@@ -63,7 +64,7 @@ class DatabaseRepository {
   }
 
   private loadInitialData() {
-    const isInit = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.INITIALIZED) : null;
+    const isInit = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.INITIALIZED) : null;
     if (!isInit) {
       this.resetDemoData();
     }
@@ -227,7 +228,7 @@ class DatabaseRepository {
     );
 
     const correctIndependent = topicAttempts.filter(a => a.isCorrect && !a.hintUsed).length;
-    const hasPassed = (progress?.lastAssessmentScore || 0) >= 80;
+    const hasPassed = (progress?.lastAssessmentScore || 0) >= ENGINE_CONFIG.THRESHOLDS.ASSESSMENT_PASS;
 
     const newStatus = determineTopicStatus(
       newMastery,
@@ -302,10 +303,11 @@ class DatabaseRepository {
       p => p.studentId === studentId && p.topicId === topicId
     );
 
-    const isPassed = scorePercentage >= 80;
+    const isPassed = scorePercentage >= ENGINE_CONFIG.THRESHOLDS.ASSESSMENT_PASS;
     const currentScore = progress ? progress.masteryScore : 0;
-    // Blend assessment score with mastery: higher weight on formal assessment
-    const finalMastery = Math.min(100, Math.round((currentScore * 0.5) + (scorePercentage * 0.5)));
+    // Blend assessment score with mastery using authoritative weight constant
+    const blend = ENGINE_CONFIG.MASTERY.ASSESSMENT_BLEND_WEIGHT;
+    const finalMastery = Math.min(100, Math.round((currentScore * (1 - blend)) + (scorePercentage * blend)));
 
     const topicAttempts = this.memoryCache.attempts.filter(
       a => a.studentId === studentId && a.topicId === topicId

@@ -88,52 +88,76 @@ export const EvaluationReport: React.FC = () => {
 
       {/* 3. High-Level Performance Metrics Strip */}
       <section className="bg-white rounded-xl border border-[#E0D8CC] shadow-xs">
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#E8E2D8]">
-          <div className="p-5 sm:p-6 space-y-1">
-            <span className="font-mono text-[11px] uppercase tracking-widest text-[#7A7265] block">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-y sm:divide-y-0 divide-[#E8E2D8] sm:divide-x">
+          <div className="p-4 sm:p-5 space-y-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[#7A7265] block">
               Misconception Precision
             </span>
-            <div className="text-3xl font-bold text-[#1B4332] font-mono">
+            <div className="text-2xl font-bold text-[#1B4332] font-mono">
               {(cm.precision * 100).toFixed(0)}%
             </div>
-            <p className="text-[11px] text-[#5C5549]">
-              Zero calculation slips mislabeled
+            <p className="text-[10px] text-[#5C5549]">
+              0 calculation slips mislabeled
             </p>
           </div>
 
-          <div className="p-5 sm:p-6 space-y-1">
-            <span className="font-mono text-[11px] uppercase tracking-widest text-[#7A7265] block">
+          <div className="p-4 sm:p-5 space-y-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[#7A7265] block">
               Misconception Recall
             </span>
-            <div className="text-3xl font-bold text-[#1B4332] font-mono">
+            <div className="text-2xl font-bold text-[#1B4332] font-mono">
               {(cm.recall * 100).toFixed(0)}%
             </div>
-            <p className="text-[11px] text-[#5C5549]">
-              100% of conceptual traps identified
+            <p className="text-[10px] text-[#5C5549]">
+              All conceptual traps detected
             </p>
           </div>
 
-          <div className="p-5 sm:p-6 space-y-1">
-            <span className="font-mono text-[11px] uppercase tracking-widest text-[#7A7265] block">
-              False Positive Rate (FPR)
+          <div className="p-4 sm:p-5 space-y-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[#7A7265] block">
+              F1 Benchmark Score
             </span>
-            <div className="text-3xl font-bold text-[#2D6A4F] font-mono">
+            <div className="text-2xl font-bold text-[#1B4332] font-mono">
+              {(cm.f1Score * 100).toFixed(0)}%
+            </div>
+            <p className="text-[10px] text-[#5C5549]">
+              Harmonic mean of P & R
+            </p>
+          </div>
+
+          <div className="p-4 sm:p-5 space-y-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[#7A7265] block">
+              False Positive Rate
+            </span>
+            <div className="text-2xl font-bold text-[#2D6A4F] font-mono">
               {(cm.falsePositiveRate * 100).toFixed(1)}%
             </div>
-            <p className="text-[11px] text-[#5C5549]">
-              Strict multi-evidence threshold
+            <p className="text-[10px] text-[#5C5549]">
+              Strict multi-evidence gate
             </p>
           </div>
 
-          <div className="p-5 sm:p-6 space-y-1">
-            <span className="font-mono text-[11px] uppercase tracking-widest text-[#7A7265] block">
-              Diagnostic Efficiency
+          <div className="p-4 sm:p-5 space-y-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[#7A7265] block">
+              Diagnostic Average
             </span>
-            <div className="text-3xl font-bold text-[#C57D36] font-mono">
+            <div className="text-2xl font-bold text-[#C57D36] font-mono">
               {report.diagnosticEfficiency.averageQuestionsAsked} Qs
             </div>
-            <p className="text-[11px] text-[#5C5549]">
-              Fast early-stopping convergence
+            <p className="text-[10px] text-[#5C5549]">
+              Early-stopping convergence
+            </p>
+          </div>
+
+          <div className="p-4 sm:p-5 space-y-1">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[#7A7265] block">
+              Bad Recommendation
+            </span>
+            <div className="text-2xl font-bold text-[#1B4332] font-mono">
+              {(cm.incorrectRecommendationRate * 100).toFixed(1)}%
+            </div>
+            <p className="text-[10px] text-[#5C5549]">
+              Pedagogical route integrity
             </p>
           </div>
         </div>
@@ -184,13 +208,18 @@ export const EvaluationReport: React.FC = () => {
 
       {/* 5. Synthetic Student Archetype Simulation Logs */}
       <section className="bg-white rounded-xl border border-[#E0D8CC] p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="border-b border-[#E8E2D8] pb-3">
-          <h3 className="font-editorial text-xl font-bold text-[#1A1817]">
-            Simulated Student Ability Archetypes ({report.archetypeResults.length})
-          </h3>
-          <p className="text-xs text-[#7A7265] mt-0.5">
-            Trace log of adaptive engine behavior across distinct student ability profiles.
-          </p>
+        <div className="border-b border-[#E8E2D8] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="font-editorial text-xl font-bold text-[#1A1817]">
+              Simulated Student Ability Archetypes ({report.archetypeResults.length} Archetypes · {report.totalEvaluatedAttempts} Evaluated Attempts)
+            </h3>
+            <p className="text-xs text-[#7A7265] mt-0.5">
+              Trace log of adaptive engine behavior across 9 distinct student ability profiles ({report.diagnosticEfficiency.trialsRun} diagnostic trials).
+            </p>
+          </div>
+          <span className="font-mono text-xs px-2.5 py-1 rounded bg-[#FAF1E4] text-[#C57D36] font-semibold border border-[#E8D4BE] self-start sm:self-auto">
+            Synthetic Benchmark Trace
+          </span>
         </div>
 
         <div className="space-y-4">

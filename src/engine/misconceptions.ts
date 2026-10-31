@@ -1,5 +1,6 @@
 import { MisconceptionCode, MisconceptionConfidence, ErrorRootCause, Question, Attempt } from '../types';
 import { MISCONCEPTIONS } from '../data/curriculum/fractions';
+import { ENGINE_CONFIG } from './config';
 
 export interface RemediationPlan {
   activityType: 'visual_concept_repair' | 'prerequisite_refresher' | 'precision_drill' | 'general_review';
@@ -80,12 +81,12 @@ export function evaluateStudentAnswer(
   // Legacy hintUsed = 70
   let scoreCredit = 0;
   if (isCorrect) {
-    if (hintLevelUsed === 1) scoreCredit = 90;
-    else if (hintLevelUsed === 2) scoreCredit = 75;
-    else if (hintLevelUsed === 3) scoreCredit = 55;
-    else if (hintLevelUsed === 4) scoreCredit = 40;
-    else if (hintUsed) scoreCredit = 70;
-    else scoreCredit = 100;
+    if (hintLevelUsed === 1) scoreCredit = ENGINE_CONFIG.HINT_CREDITS.STAGE_1_CONCEPTUAL;
+    else if (hintLevelUsed === 2) scoreCredit = ENGINE_CONFIG.HINT_CREDITS.STAGE_2_GUIDED_STEP;
+    else if (hintLevelUsed === 3) scoreCredit = ENGINE_CONFIG.HINT_CREDITS.STAGE_3_EXPLANATION;
+    else if (hintLevelUsed === 4) scoreCredit = ENGINE_CONFIG.HINT_CREDITS.STAGE_4_WORKED_SOLUTION;
+    else if (hintUsed) scoreCredit = ENGINE_CONFIG.HINT_CREDITS.LEGACY_HINT_DEFAULT;
+    else scoreCredit = ENGINE_CONFIG.HINT_CREDITS.INDEPENDENT_CORRECT;
   }
 
   if (!isCorrect) {
@@ -114,10 +115,11 @@ export function evaluateStudentAnswer(
         rootCause = classifyRootCause(question.misconceptionTag);
         misconceptionConfidence = 'confirmed';
       } else {
-        // First occurrence without option-specific distractor is only 'suspected'
-        detectedMisconception = question.misconceptionTag;
-        rootCause = classifyRootCause(question.misconceptionTag);
-        misconceptionConfidence = 'suspected';
+        // First occurrence without option-specific distractor is ambiguous: do NOT label with misconception!
+        // Prevents false-positive labeling on single unmapped mistakes
+        rootCause = 'unclassified';
+        detectedMisconception = undefined;
+        misconceptionConfidence = undefined;
       }
     } else {
       // Check for calculation slip vs unclassified
@@ -196,7 +198,10 @@ export function detectRepeatedMisconceptions(
   for (const attempt of topicAttempts) {
     if (!attempt.isCorrect && attempt.detectedMisconception) {
       counts[attempt.detectedMisconception] = (counts[attempt.detectedMisconception] || 0) + 1;
-      if (attempt.misconceptionConfidence === 'confirmed' || (counts[attempt.detectedMisconception] || 0) >= 2) {
+      if (
+        attempt.misconceptionConfidence === 'confirmed' ||
+        (counts[attempt.detectedMisconception] || 0) >= ENGINE_CONFIG.DIAGNOSIS.CONFIRMATION_MIN_ATTEMPTS
+      ) {
         confirmedMap[attempt.detectedMisconception] = true;
       }
     }
@@ -211,7 +216,7 @@ export function detectRepeatedMisconceptions(
         code: mCode,
         count: c,
         name: MISCONCEPTIONS[mCode]?.name || mCode,
-        isConfirmed: confirmedMap[mCode] === true || c >= 2,
+        isConfirmed: confirmedMap[mCode] === true || c >= ENGINE_CONFIG.DIAGNOSIS.CONFIRMATION_MIN_ATTEMPTS,
         rootCause: classifyRootCause(mCode)
       };
     })

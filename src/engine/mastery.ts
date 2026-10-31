@@ -1,13 +1,7 @@
 import { TopicStatus } from '../types';
+import { ENGINE_CONFIG } from './config';
 
-export const MASTERY_THRESHOLDS = {
-  NEEDS_SUPPORT: 39,
-  DEVELOPING: 69,
-  ALMOST_MASTERED: 84,
-  MASTERED: 85,
-  PREREQUISITE_MINIMUM: 70,
-  ASSESSMENT_PASS: 80,
-} as const;
+export const MASTERY_THRESHOLDS = ENGINE_CONFIG.THRESHOLDS;
 
 export function getMasteryLabel(score: number): {
   label: string;
@@ -21,7 +15,7 @@ export function getMasteryLabel(score: number): {
       textColor: 'text-primary'
     };
   }
-  if (score >= MASTERY_THRESHOLDS.ALMOST_MASTERED - 14) { // 70-84
+  if (score >= MASTERY_THRESHOLDS.PREREQUISITE_MINIMUM) { // 70-84
     return {
       label: 'Almost Mastered',
       badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
@@ -44,7 +38,7 @@ export function getMasteryLabel(score: number): {
 
 /**
  * Calculates new topic mastery using Exponential Moving Average:
- * new_mastery = (old_mastery * 0.7) + (attempt_score * 0.3)
+ * new_mastery = (old_mastery * EMA_HISTORY_WEIGHT) + (attempt_score * EMA_ATTEMPT_WEIGHT)
  */
 export function calculateNewMastery(
   oldMastery: number,
@@ -57,24 +51,24 @@ export function calculateNewMastery(
     if (scoreCreditOverride !== undefined) {
       attemptScore = scoreCreditOverride;
     } else {
-      attemptScore = hintUsed ? 70 : 100;
+      attemptScore = hintUsed ? ENGINE_CONFIG.HINT_CREDITS.LEGACY_HINT_DEFAULT : ENGINE_CONFIG.HINT_CREDITS.INDEPENDENT_CORRECT;
     }
   } else {
-    attemptScore = 0;
+    attemptScore = ENGINE_CONFIG.HINT_CREDITS.INCORRECT;
   }
 
   // If this is the very first attempt (mastery is 0)
   if (oldMastery === 0) {
-    return Math.round(attemptScore * 0.6); // Gentle baseline start
+    return Math.round(attemptScore * ENGINE_CONFIG.MASTERY.COLD_START_WEIGHT); // Gentle baseline start
   }
 
-  const updated = (oldMastery * 0.7) + (attemptScore * 0.3);
+  const updated = (oldMastery * ENGINE_CONFIG.MASTERY.EMA_HISTORY_WEIGHT) + (attemptScore * ENGINE_CONFIG.MASTERY.EMA_ATTEMPT_WEIGHT);
   return Math.min(100, Math.max(0, Math.round(updated)));
 }
 
 /**
  * Determines topic progression status based on mastery, attempt count, and assessment results.
- * Strict Anti-Slop: A topic CANNOT be marked 'mastered' without at least 3 independent correct answers
+ * Strict Anti-Slop: A topic CANNOT be marked 'mastered' without at least MIN_INDEPENDENT_FOR_MASTERY independent correct answers
  * and passing assessment.
  */
 export function determineTopicStatus(
@@ -87,11 +81,18 @@ export function determineTopicStatus(
     return 'not_started';
   }
 
-  if (masteryScore >= MASTERY_THRESHOLDS.MASTERED && hasPassedAssessment && correctIndependentAttempts >= 3) {
+  if (
+    masteryScore >= MASTERY_THRESHOLDS.MASTERED &&
+    hasPassedAssessment &&
+    correctIndependentAttempts >= ENGINE_CONFIG.MASTERY.MIN_INDEPENDENT_FOR_MASTERY
+  ) {
     return 'mastered';
   }
 
-  if (masteryScore >= MASTERY_THRESHOLDS.PREREQUISITE_MINIMUM && totalAttempts >= 3) {
+  if (
+    masteryScore >= MASTERY_THRESHOLDS.PREREQUISITE_MINIMUM &&
+    totalAttempts >= ENGINE_CONFIG.MASTERY.MIN_ATTEMPTS_FOR_TEST
+  ) {
     return 'ready_for_test';
   }
 

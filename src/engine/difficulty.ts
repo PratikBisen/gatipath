@@ -1,4 +1,5 @@
 import { DifficultyLevel, Question, Attempt, MisconceptionCode } from '../types';
+import { ENGINE_CONFIG } from './config';
 
 export interface QuestionSelectionRationale {
   question: Question;
@@ -11,14 +12,14 @@ export function calculateTargetDifficulty(recentAttempts: Attempt[]): Difficulty
     return 'easy';
   }
 
-  // Look at last 3 to 5 attempts
-  const slice = recentAttempts.slice(-5);
+  // Look at rolling window of recent attempts
+  const slice = recentAttempts.slice(-ENGINE_CONFIG.DIFFICULTY.ROLLING_WINDOW_SIZE);
   const correctCount = slice.filter(a => a.isCorrect && !a.hintUsed).length;
   const accuracy = correctCount / slice.length;
 
-  if (accuracy >= 0.75 && slice.length >= 3) {
+  if (accuracy >= ENGINE_CONFIG.DIFFICULTY.HARD_ACCURACY_THRESHOLD && slice.length >= ENGINE_CONFIG.DIFFICULTY.MIN_ATTEMPTS_FOR_HARD) {
     return 'hard';
-  } else if (accuracy >= 0.50) {
+  } else if (accuracy >= ENGINE_CONFIG.DIFFICULTY.MEDIUM_ACCURACY_THRESHOLD) {
     return 'medium';
   } else {
     return 'easy';

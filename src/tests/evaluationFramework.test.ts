@@ -1,32 +1,50 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { runAdaptiveEngineEvaluation } from '../engine/evaluation/simulationEngine';
 import { SmartDiagnosticEngine } from '../engine/diagnostic';
 import { buildProgressiveHints, getQuestionHints } from '../engine/hints';
 import { classifyRootCause, evaluateStudentAnswer } from '../engine/misconceptions';
 import { db } from '../lib/db';
+import { OfflineSyncManager } from '../lib/offline/syncManager';
 import { QUESTIONS, TOPICS } from '../data/curriculum/fractions';
 
+// Provide memory localStorage polyfill for Node/Vitest test runner
+if (typeof globalThis.localStorage === 'undefined') {
+  const store: Record<string, string> = {};
+  (globalThis as any).localStorage = {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, val: string) => { store[key] = String(val); },
+    removeItem: (key: string) => { delete store[key]; },
+    clear: () => { Object.keys(store).forEach(k => delete store[k]); },
+    key: (index: number) => Object.keys(store)[index] || null,
+    get length() { return Object.keys(store).length; }
+  };
+}
+
 describe('Adaptive Engine Evaluation Framework — Measurable Benchmarks', () => {
-  it('executes simulation across all 5 synthetic student archetypes', () => {
+  it('executes simulation across all 9 synthetic student archetypes', () => {
     const report = runAdaptiveEngineEvaluation();
-    expect(report.totalSimulationsRun).toBe(5);
-    expect(report.archetypeResults.length).toBe(5);
+    expect(report.totalSimulationsRun).toBe(9);
+    expect(report.archetypeResults.length).toBe(9);
+    expect(report.totalEvaluatedAttempts).toBe(36);
 
     // Verify all archetypes matched their expected deterministic behavior
     const allMatched = report.archetypeResults.every(r => r.expectedBehaviorMatched);
     expect(allMatched).toBe(true);
   });
 
-  it('verifies misconception false positive rate is 0% on calculation slips', () => {
+  it('verifies misconception false positive rate is 0% on calculation slips and ambiguous guesses', () => {
     const report = runAdaptiveEngineEvaluation();
     expect(report.confusionMatrix.falsePositives).toBe(0);
     expect(report.confusionMatrix.falsePositiveRate).toBe(0);
   });
 
-  it('verifies misconception recall is 100% on conceptual traps', () => {
+  it('verifies misconception recall and F1 score on conceptual traps and prerequisite gaps', () => {
     const report = runAdaptiveEngineEvaluation();
     expect(report.confusionMatrix.falseNegatives).toBe(0);
     expect(report.confusionMatrix.recall).toBe(1.0);
+    expect(report.confusionMatrix.precision).toBe(1.0);
+    expect(report.confusionMatrix.f1Score).toBe(1.0);
+    expect(report.confusionMatrix.incorrectRecommendationRate).toBe(0);
   });
 
   it('verifies diagnostic efficiency: early stopping locates boundary in <= 5 questions', () => {
@@ -182,5 +200,146 @@ describe('Data Integrity & Idempotency Safeguards', () => {
     expect(postSecondCount).toBe(postFirstCount);
     // Result returned is identical attempt
     expect(res2.attempt.id).toBe(res1.attempt.id);
+  });
+
+  it('safely queues offline attempts and synchronizes without duplicates on multiple sync calls', () => {
+    const syncManager = new OfflineSyncManager();
+    const testIdempotency = `offline-sync-test-${Date.now()}`;
+    const studentId = 'student-aarav';
+    const topicId = 'topic-1';
+
+    const initialAttempts = db.getAttempts(studentId, topicId).length;
+
+    // Enqueue an attempt while offline
+    syncManager.enqueueAttempt({
+      idempotencyKey: testIdempotency,
+      studentId,
+      questionId: 'q1-1',
+      topicId,
+      submittedAnswer: 'opt-a',
+      isCorrect: true,
+      hintUsed: false,
+      scoreCredit: 100,
+      timeTakenSeconds: 20
+    });
+
+    expect(syncManager.getQueuedCount()).toBeGreaterThanOrEqual(1);
+
+    // First sync call
+    const syncResult1 = syncManager.syncQueuedAttempts();
+    expect(syncResult1.syncedCount).toBeGreaterThanOrEqual(1);
+    expect(syncManager.getQueuedCount()).toBe(0);
+
+    const countAfterFirstSync = db.getAttempts(studentId, topicId).length;
+    expect(countAfterFirstSync).toBe(initialAttempts + 1);
+
+    // Duplicate sync event: queue is already empty, should safely return 0 and not corrupt data
+    const syncResult2 = syncManager.syncQueuedAttempts();
+    expect(syncResult2.syncedCount).toBe(0);
+    expect(db.getAttempts(studentId, topicId).length).toBe(countAfterFirstSync);
+  });
+
+  it('preserves student progress and state consistency across simulated browser reload', () => {
+    const studentId = 'student-aarav';
+    const topicId = 'topic-3';
+
+    // Record an attempt
+    db.recordAttempt({
+      studentId,
+      questionId: 'q3-5',
+      topicId,
+      submittedAnswer: 'opt-a',
+      isCorrect: true,
+      hintUsed: false,
+      scoreCredit: 100,
+      timeTakenSeconds: 30
+    });
+
+    const progressBeforeReload = db.getStudentProgress(studentId).find(p => p.topicId === topicId);
+    expect(progressBeforeReload).toBeDefined();
+
+    // Verify localStorage retains serialized state
+    const rawProgress = localStorage.getItem('gatipath_progress');
+    expect(rawProgress).toBeTruthy();
+
+    const parsed = JSON.parse(rawProgress!);
+    const savedProgress = parsed.find((p: any) => p.studentId === studentId && p.topicId === topicId);
+    expect(savedProgress.masteryScore).toBe(progressBeforeReload!.masteryScore);
+    expect(savedProgress.totalAttempts).toBe(progressBeforeReload!.totalAttempts);
+  });
+});
+
+describe('Synthetic Scenario Coverage — All 9 Core Evaluation Profiles', () => {
+  it('covers conceptual misunderstandings with targeted remediation', () => {
+    const report = runAdaptiveEngineEvaluation();
+    const aarav = report.archetypeResults.find(a => a.archetypeId === 'arch-aarav-conceptual')!;
+    expect(aarav.profileType).toBe('conceptual_trap');
+    expect(aarav.expectedBehaviorMatched).toBe(true);
+    expect(aarav.detectedMisconceptions).toContain('Adding Denominators Together');
+  });
+
+  it('covers prerequisite gaps with routing to prior curriculum topic', () => {
+    const report = runAdaptiveEngineEvaluation();
+    const rohan = report.archetypeResults.find(a => a.archetypeId === 'arch-rohan-prereq')!;
+    expect(rohan.profileType).toBe('prerequisite_gap');
+    expect(rohan.expectedBehaviorMatched).toBe(true);
+    expect(rohan.recommendationGiven).toContain('prerequisite_review');
+  });
+
+  it('covers calculation mistakes without false-positive misconception labeling', () => {
+    const report = runAdaptiveEngineEvaluation();
+    const slip = report.archetypeResults.find(a => a.archetypeId === 'arch-slip-student')!;
+    expect(slip.profileType).toBe('calculation_slip');
+    expect(slip.expectedBehaviorMatched).toBe(true);
+    expect(slip.detectedMisconceptions.length).toBe(0);
+  });
+
+  it('covers ambiguous wrong answers without falsely labeling misconceptions', () => {
+    const report = runAdaptiveEngineEvaluation();
+    const guess = report.archetypeResults.find(a => a.archetypeId === 'arch-ambiguous-guess')!;
+    expect(guess.profileType).toBe('ambiguous_wrong');
+    expect(guess.expectedBehaviorMatched).toBe(true);
+    expect(guess.detectedMisconceptions.length).toBe(0);
+  });
+
+  it('covers repeated misconceptions with high confidence confirmation', () => {
+    const report = runAdaptiveEngineEvaluation();
+    const repeated = report.archetypeResults.find(a => a.archetypeId === 'arch-repeated-trap')!;
+    expect(repeated.profileType).toBe('repeated_misconception');
+    expect(repeated.expectedBehaviorMatched).toBe(true);
+    expect(repeated.detectedMisconceptions).toContain('Adding Denominators Together');
+  });
+
+  it('covers correct answers after hints with calibrated partial credit', () => {
+    const report = runAdaptiveEngineEvaluation();
+    const hintLearner = report.archetypeResults.find(a => a.archetypeId === 'arch-scaffold-hints')!;
+    expect(hintLearner.profileType).toBe('correct_after_hints');
+    expect(hintLearner.expectedBehaviorMatched).toBe(true);
+    expect(hintLearner.finalMastery).toBeGreaterThan(20);
+  });
+
+  it('covers recovery after remediation showing rebound and reinforcement recommendation', () => {
+    const report = runAdaptiveEngineEvaluation();
+    const recovery = report.archetypeResults.find(a => a.archetypeId === 'arch-recovery-remediation')!;
+    expect(recovery.profileType).toBe('recovery_remediation');
+    expect(recovery.expectedBehaviorMatched).toBe(true);
+    expect(recovery.recommendationGiven).toContain('Recovery Verified');
+  });
+
+  it('covers accelerated learners advancing towards assessment readiness', () => {
+    const report = runAdaptiveEngineEvaluation();
+    const master = report.archetypeResults.find(a => a.archetypeId === 'arch-priya-master')!;
+    expect(master.profileType).toBe('accelerated_master');
+    expect(master.expectedBehaviorMatched).toBe(true);
+    expect(master.finalMastery).toBeGreaterThanOrEqual(70);
+  });
+
+  it('covers inconsistent student performance proving EMA smoothing stability', () => {
+    const report = runAdaptiveEngineEvaluation();
+    const inconsistent = report.archetypeResults.find(a => a.archetypeId === 'arch-inconsistent-erratic')!;
+    expect(inconsistent.profileType).toBe('inconsistent_performer');
+    expect(inconsistent.expectedBehaviorMatched).toBe(true);
+    expect(inconsistent.finalMastery).toBeGreaterThanOrEqual(30);
+    expect(inconsistent.finalMastery).toBeLessThanOrEqual(70);
   });
 });

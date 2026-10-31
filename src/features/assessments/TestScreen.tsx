@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { db } from '../../lib/db';
+import { ENGINE_CONFIG } from '../../engine/config';
 import { Question } from '../../types';
 import { FractionBar } from '../../components/visuals/FractionBar';
 import { FractionPie } from '../../components/visuals/FractionPie';
@@ -76,7 +77,7 @@ export const TestScreen: React.FC = () => {
 
     db.recordAssessmentCompletion(student.id, topic.id, percent);
 
-    if (percent >= 80) {
+    if (percent >= ENGINE_CONFIG.THRESHOLDS.ASSESSMENT_PASS) {
       confetti({
         particleCount: 60,
         spread: 70,
@@ -240,15 +241,15 @@ export const TestScreen: React.FC = () => {
               Assessment Evaluation
             </span>
             <h2 className="font-editorial text-3xl font-bold text-[#1A1817]">
-              {scorePercentage >= 80 ? 'Mastery Formally Certified!' : 'Assessment Incomplete'}
+              {scorePercentage >= ENGINE_CONFIG.THRESHOLDS.ASSESSMENT_PASS ? 'Mastery Formally Certified!' : 'Assessment Incomplete'}
             </h2>
             <div className="text-4xl font-bold font-mono text-[#1B4332] pt-2">
               {scorePercentage}%
             </div>
             <p className="text-xs text-[#5C5549] max-w-md mx-auto leading-relaxed">
-              {scorePercentage >= 80
-                ? 'Congratulations! You have demonstrated un-scaffolded understanding of this module and met the 80% certification bar.'
-                : 'You scored below the 80% passing threshold. We recommend reviewing the worked examples and practicing adaptive questions before re-testing.'}
+              {scorePercentage >= ENGINE_CONFIG.THRESHOLDS.ASSESSMENT_PASS
+                ? `Congratulations! You have demonstrated un-scaffolded understanding of this module and met the ${ENGINE_CONFIG.THRESHOLDS.ASSESSMENT_PASS}% certification bar.`
+                : `You scored below the ${ENGINE_CONFIG.THRESHOLDS.ASSESSMENT_PASS}% passing threshold. We recommend reviewing the worked examples and practicing adaptive questions before re-testing.`}
             </p>
           </div>
 

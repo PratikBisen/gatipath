@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { db } from '../../lib/db';
 import { StudentTopicProgress, Recommendation, Attempt } from '../../types';
+import { checkPrerequisites } from '../../engine/prerequisites';
+import { ENGINE_CONFIG } from '../../engine/config';
 import {
   BookOpen,
   ArrowRight,
@@ -29,6 +31,11 @@ export const StudentDashboard: React.FC = () => {
 
   const student = isStudent && currentUser ? currentUser : db.getStudents()[0];
   const topics = db.getTopics();
+
+  const progressMap = progressList.reduce((acc, p) => {
+    acc[p.topicId] = p;
+    return acc;
+  }, {} as Record<string, StudentTopicProgress>);
 
   useEffect(() => {
     if (student) {
@@ -219,11 +226,13 @@ export const StudentDashboard: React.FC = () => {
           {/* Open Syllabus Entries */}
           <div className="divide-y divide-[#EAE4D8] border-y border-[#EAE4D8]">
             {topics.map((topic) => {
-              const prog = progressList.find(p => p.topicId === topic.id);
+              const prog = progressMap[topic.id];
               const score = prog ? prog.masteryScore : 0;
               const isMastered = prog?.status === 'mastered';
               const isCurrent = topic.id === currentTopic.id;
-              const isLocked = topic.sequenceOrder > 1 && (!progressList.find(p => p.topicId === `topic-${topic.sequenceOrder - 1}`) || progressList.find(p => p.topicId === `topic-${topic.sequenceOrder - 1}`)?.masteryScore! < 40);
+              const prereqCheck = checkPrerequisites(topic, topics, progressMap);
+              const isLocked = !prereqCheck.isSatisfied && score === 0;
+              const isReadyForAssessment = score >= ENGINE_CONFIG.THRESHOLDS.PREREQUISITE_MINIMUM && (prog?.totalAttempts || 0) >= ENGINE_CONFIG.MASTERY.MIN_ATTEMPTS_FOR_TEST;
 
               return (
                 <div
@@ -285,7 +294,7 @@ export const StudentDashboard: React.FC = () => {
                       >
                         Solve
                       </button>
-                      {score >= 70 && (
+                      {isReadyForAssessment && (
                         <button
                           onClick={() => navigate(`/test/${topic.id}`)}
                           className="px-3 py-1.5 rounded border border-[#C57D36] bg-[#FAF3EB] text-[#C57D36] hover:bg-[#F4E6D4] text-xs font-semibold transition-colors"
@@ -344,7 +353,7 @@ export const StudentDashboard: React.FC = () => {
                           ? 'bg-[#E8F4EE] text-[#1B4332]'
                           : 'bg-[#FEEBEB] text-[#8C2828]'
                       }`}>
-                        {attempt.isCorrect ? (attempt.hintUsed ? '+70 pts (Hint)' : '+100 pts') : 'Review'}
+                        {attempt.isCorrect ? `+${attempt.scoreCredit} pts${attempt.hintUsed ? ` (Hint L${attempt.hintLevelUsed || 1})` : ''}` : 'Review'}
                       </span>
                     </div>
                     <div className="text-[11px] text-[#5C5549] flex items-center justify-between">

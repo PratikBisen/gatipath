@@ -557,7 +557,7 @@ export const QUESTIONS: Question[] = [
       { id: 'opt-a', text: '1/2' },
       { id: 'opt-b', text: '2/8', misconceptionCode: 'denominator_addition_error', distractorExplanation: 'Adding denominators (4+4=8) is mathematically invalid.' },
       { id: 'opt-c', text: '2/4', misconceptionCode: 'simplification_error', distractorExplanation: '2/4 is numerically correct but not in simplest irreducible form.' },
-      { id: 'opt-d', text: '1/8', misconceptionCode: 'denominator_addition_error' }
+      { id: 'opt-d', text: '1/8' }
     ],
     correctAnswer: 'opt-a',
     explanation: 'When adding fractions with the same denominator, keep the denominator 4 and add the numerators: 1 + 1 = 2, giving 2/4. Then simplify 2/4 by dividing numerator and denominator by 2 to get 1/2. NEVER add denominators together!',
@@ -602,7 +602,7 @@ export const QUESTIONS: Question[] = [
       { id: 'opt-a', text: '1/2' },
       { id: 'opt-b', text: '2/9', misconceptionCode: 'denominator_addition_error' },
       { id: 'opt-c', text: '3/6', misconceptionCode: 'simplification_error' },
-      { id: 'opt-d', text: '2/6', misconceptionCode: 'lcm_error' }
+      { id: 'opt-d', text: '2/6' }
     ],
     correctAnswer: 'opt-a',
     explanation: 'Denominators are 3 and 6. The LCM is 6. Convert 1/3: (1 × 2)/(3 × 2) = 2/6. Now add: 2/6 + 1/6 = 3/6. Simplify 3/6 by dividing by 3 to get 1/2.',

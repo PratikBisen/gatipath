@@ -1,5 +1,6 @@
 import { Question, MisconceptionCode, ErrorRootCause, DiagnosticSessionResult, DiagnosticQuestionResult } from '../types';
 import { QUESTIONS, TOPICS } from '../data/curriculum/fractions';
+import { ENGINE_CONFIG } from './config';
 
 export interface DiagnosticItem {
   id: string;
@@ -149,7 +150,7 @@ export class SmartDiagnosticEngine {
 
     // Fallback: pick any unasked probe
     const unasked = DIAGNOSTIC_PROBES.find(p => !this.answeredProbeIds.has(p.id));
-    if (unasked && this.history.length < 5) {
+    if (unasked && this.history.length < ENGINE_CONFIG.DIAGNOSTIC.MAX_QUESTIONS) {
       this.answeredProbeIds.add(unasked.id);
       return unasked;
     }
@@ -164,8 +165,8 @@ export class SmartDiagnosticEngine {
    */
   public shouldStopEarly(): boolean {
     const total = this.history.length;
-    if (total >= 5) return true; // Strict efficiency cap: never ask more than 5 questions
-    if (total < 2) return false; // Need at least 2 questions to detect a gradient
+    if (total >= ENGINE_CONFIG.DIAGNOSTIC.MAX_QUESTIONS) return true; // Strict efficiency cap
+    if (total < ENGINE_CONFIG.DIAGNOSTIC.MIN_QUESTIONS) return false; // Need at least minimum probes to detect gradient
 
     const hasT1Result = this.history.some(h => h.topicId === 'topic-1');
     const hasT2Result = this.history.some(h => h.topicId === 'topic-2');

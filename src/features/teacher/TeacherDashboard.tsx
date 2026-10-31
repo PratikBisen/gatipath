@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { db } from '../../lib/db';
+import { ENGINE_CONFIG } from '../../engine/config';
 import {
   Users,
   AlertTriangle,
@@ -64,8 +65,8 @@ export const TeacherDashboard: React.FC = () => {
     const avg = topicProgress.length > 0
       ? Math.round(topicProgress.reduce((sum, p) => sum + p.masteryScore, 0) / topicProgress.length)
       : 0;
-    const strugglingCount = topicProgress.filter(p => p.masteryScore < 60).length;
-    const masteredCount = topicProgress.filter(p => p.masteryScore >= 80).length;
+    const strugglingCount = topicProgress.filter(p => p.masteryScore <= ENGINE_CONFIG.THRESHOLDS.NEEDS_SUPPORT).length;
+    const masteredCount = topicProgress.filter(p => p.masteryScore >= ENGINE_CONFIG.THRESHOLDS.MASTERED).length;
     const developingCount = topicProgress.length - strugglingCount - masteredCount;
 
     return {

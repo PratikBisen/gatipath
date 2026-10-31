@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { db } from '../../lib/db';
+import { ENGINE_CONFIG } from '../../engine/config';
 import {
   Search,
   ArrowRight,
@@ -218,9 +219,9 @@ export const StudentRoster: React.FC = () => {
                           <td key={seq} className="py-4 px-3 text-center">
                             <span
                               className={`font-mono text-[11px] font-semibold px-1.5 py-0.5 rounded ${
-                                score >= 80
+                                score >= ENGINE_CONFIG.THRESHOLDS.MASTERED
                                   ? 'bg-[#E8F4EE] text-[#1B4332]'
-                                  : score >= 50
+                                  : score > ENGINE_CONFIG.THRESHOLDS.NEEDS_SUPPORT
                                   ? 'bg-[#FAF1E4] text-[#C57D36]'
                                   : score > 0
                                   ? 'bg-[#FEEBEB] text-[#8C2828]'

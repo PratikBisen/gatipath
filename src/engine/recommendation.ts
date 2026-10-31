@@ -17,8 +17,27 @@ export function generateAdaptiveRecommendation(context: RecommendationContext): 
   const currentProgress = allProgress[currentTopic.id];
   const currentMastery = currentProgress ? currentProgress.masteryScore : 0;
 
-  // 1. Check for Misconceptions in recent attempts
+  // 1. Check for Misconceptions in recent attempts (account for recovery)
   const detectedMisconceptions = detectRepeatedMisconceptions(topicAttempts);
+  const hasRecovered = topicAttempts.length >= 2 &&
+    topicAttempts.slice(-2).every(a => a.isCorrect && !a.hintUsed);
+
+  if (hasRecovered && detectedMisconceptions.length > 0) {
+    return {
+      id: `rec-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      studentId,
+      topicId: currentTopic.id,
+      recommendationType: 'guided_practice',
+      title: 'Recovery Verified: Consolidate Mastery',
+      explanation: `Great progress! You successfully overcame the '${MISCONCEPTIONS[detectedMisconceptions[0].code]?.name || 'misconception'}' error with consecutive independent solves. Continue practicing to solidify the pattern.`,
+      misconceptionTag: detectedMisconceptions[0].code,
+      suggestedActionLabel: 'Continue Practice',
+      suggestedActionRoute: `/solve/${currentTopic.id}`,
+      status: 'active',
+      createdAt: new Date().toISOString()
+    };
+  }
+
   if (detectedMisconceptions.length > 0) {
     const topMisconception = detectedMisconceptions[0];
     const details = MISCONCEPTIONS[topMisconception.code];

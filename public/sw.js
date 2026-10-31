@@ -55,17 +55,22 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+        if (
+          networkResponse &&
+          (networkResponse.status === 200 || networkResponse.type === 'opaque') &&
+          (networkResponse.type === 'basic' || networkResponse.type === 'cors' || networkResponse.type === 'opaque')
+        ) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
         }
         return networkResponse;
-      }).catch(() => {
+      }).catch(async () => {
         // If navigation request fails, return cached index.html
         if (event.request.mode === 'navigate') {
-          return caches.match('./index.html') || caches.match('/');
+          const cachedIndex = await caches.match('./index.html') || await caches.match('/index.html') || await caches.match('./');
+          if (cachedIndex) return cachedIndex;
         }
       });
     })
