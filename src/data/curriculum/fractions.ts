@@ -1,4 +1,5 @@
 import { Topic, Question, Misconception } from '../../types';
+import { buildProgressiveHints } from '../../engine/hints';
 
 export const MISCONCEPTIONS: Record<string, Misconception> = {
   denominator_addition_error: {
@@ -171,6 +172,8 @@ export const TOPICS: Topic[] = [
     sequenceOrder: 1,
     estimatedMinutes: 20,
     prerequisites: [],
+    curriculumStandard: 'NCERT M701 / CBSE Class 7 Fractions & Decimals §2.1',
+    ncertReference: 'Chapter 2: Fractions and Decimals — Recall & Representation',
     keyConcepts: [
       'Numerator counts parts taken; denominator counts total equal parts',
       'Proper fractions < 1; Improper fractions ≥ 1',
@@ -187,6 +190,8 @@ export const TOPICS: Topic[] = [
     sequenceOrder: 2,
     estimatedMinutes: 25,
     prerequisites: ['topic-1'],
+    curriculumStandard: 'NCERT M702 / CBSE Class 7 Fractions & Decimals §2.2',
+    ncertReference: 'Chapter 2: Fractions and Decimals — Comparison & Ordering',
     keyConcepts: [
       'Comparing fractions with like denominators',
       'Finding the Least Common Multiple (LCM) for unlike denominators',
@@ -203,6 +208,8 @@ export const TOPICS: Topic[] = [
     sequenceOrder: 3,
     estimatedMinutes: 30,
     prerequisites: ['topic-1', 'topic-2'],
+    curriculumStandard: 'NCERT M703 / CBSE Class 7 Fractions & Decimals §2.3',
+    ncertReference: 'Chapter 2: Fractions and Decimals — Addition and Subtraction Operations',
     keyConcepts: [
       'Adding and subtracting like fractions (keep denominator constant)',
       'Avoiding the common denominator-addition misconception (1/4 + 1/4 ≠ 2/8)',
@@ -219,6 +226,8 @@ export const TOPICS: Topic[] = [
     sequenceOrder: 4,
     estimatedMinutes: 30,
     prerequisites: ['topic-1', 'topic-3'],
+    curriculumStandard: 'NCERT M704 / CBSE Class 7 Fractions & Decimals §2.4–2.5',
+    ncertReference: 'Chapter 2: Fractions and Decimals — Multiplication, Reciprocal & Division',
     keyConcepts: [
       'Multiplying numerators together and denominators together',
       'Understanding reciprocals (multiplicative inverses)',
@@ -535,6 +544,7 @@ export const QUESTIONS: Question[] = [
     topicId: 'topic-3',
     difficulty: 'easy',
     prerequisiteTopicId: 'topic-1',
+    curriculumStandardCode: 'NCERT-M703',
     questionType: 'multiple_choice',
     questionText: 'Calculate: 1/4 + 1/4. Choose the answer in simplest form.',
     visualModel: {
@@ -545,13 +555,19 @@ export const QUESTIONS: Question[] = [
     },
     options: [
       { id: 'opt-a', text: '1/2' },
-      { id: 'opt-b', text: '2/8', misconceptionCode: 'denominator_addition_error' },
-      { id: 'opt-c', text: '2/4', misconceptionCode: 'simplification_error' },
+      { id: 'opt-b', text: '2/8', misconceptionCode: 'denominator_addition_error', distractorExplanation: 'Adding denominators (4+4=8) is mathematically invalid.' },
+      { id: 'opt-c', text: '2/4', misconceptionCode: 'simplification_error', distractorExplanation: '2/4 is numerically correct but not in simplest irreducible form.' },
       { id: 'opt-d', text: '1/8', misconceptionCode: 'denominator_addition_error' }
     ],
     correctAnswer: 'opt-a',
     explanation: 'When adding fractions with the same denominator, keep the denominator 4 and add the numerators: 1 + 1 = 2, giving 2/4. Then simplify 2/4 by dividing numerator and denominator by 2 to get 1/2. NEVER add denominators together!',
-    hint: 'Keep the denominator 4 and add the top numbers 1 + 1, then simplify.'
+    hint: 'Keep the denominator 4 and add the top numbers 1 + 1, then simplify.',
+    hints: buildProgressiveHints(
+      'Conceptual Reminder: Denominators state the size of each slice. When slices are the exact same size (fourths), combining them does NOT change their size.',
+      'Guided Next Step: Keep the denominator constant at 4. Compute only the top numerators: 1 + 1 = ?',
+      'Specific Explanation: 1/4 + 1/4 = 2/4. Now check if 2/4 can be reduced by dividing both numbers by 2.',
+      'Full Worked Solution: 1/4 + 1/4 = (1 + 1)/4 = 2/4. Dividing both numerator and denominator by 2 gives 1/2. Final simplest form = 1/2.'
+    )
   },
   {
     id: 'q3-2',

@@ -23,6 +23,24 @@ export function generateAdaptiveRecommendation(context: RecommendationContext): 
     const topMisconception = detectedMisconceptions[0];
     const details = MISCONCEPTIONS[topMisconception.code];
 
+    if (topMisconception.rootCause === 'prerequisite_gap') {
+      const targetPrereq = currentTopic.prerequisites[0] || 'topic-1';
+      const prereqTopic = allTopics.find(t => t.id === targetPrereq);
+      return {
+        id: `rec-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        studentId,
+        topicId: targetPrereq,
+        recommendationType: 'prerequisite_review',
+        title: `Prerequisite Gap: ${details ? details.name : 'Foundational Skill'}`,
+        explanation: `Recommended because recent attempts indicate difficulty with '${details?.name || 'foundational concept'}'. Strengthening this prerequisite in ${prereqTopic?.title || 'earlier topics'} will prevent further confusion.`,
+        misconceptionTag: topMisconception.code,
+        suggestedActionLabel: `Review ${prereqTopic?.title || 'Prerequisite'}`,
+        suggestedActionRoute: `/solve/${targetPrereq}`,
+        status: 'active',
+        createdAt: new Date().toISOString()
+      };
+    }
+
     return {
       id: `rec-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       studentId,
@@ -38,7 +56,7 @@ export function generateAdaptiveRecommendation(context: RecommendationContext): 
     };
   }
 
-  // 2. Check Prerequisite Readiness
+  // 2. Check Prerequisite Readiness from curriculum graph
   const prereqCheck = checkPrerequisites(currentTopic, allTopics, allProgress);
   if (!prereqCheck.isSatisfied) {
     const missing = prereqCheck.missingPrerequisites[0];

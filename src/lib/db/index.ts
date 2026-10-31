@@ -169,6 +169,41 @@ class DatabaseRepository {
     updatedProgress: StudentTopicProgress;
     newRecommendation: Recommendation;
   } {
+    // 0. Idempotency Guard (Double-Click / Re-submission Protection)
+    if (attempt.idempotencyKey) {
+      const existing = this.memoryCache.attempts.find(a => a.idempotencyKey === attempt.idempotencyKey);
+      if (existing) {
+        const currentProgress = this.getTopicProgress(attempt.studentId, attempt.topicId) || {
+          id: `p-${attempt.studentId}-${attempt.topicId}`,
+          studentId: attempt.studentId,
+          topicId: attempt.topicId,
+          masteryScore: 0,
+          totalAttempts: 1,
+          correctAttempts: attempt.isCorrect ? 1 : 0,
+          hintsUsedCount: attempt.hintUsed ? 1 : 0,
+          status: 'in_progress' as const,
+          updatedAt: new Date().toISOString()
+        };
+        const currentRec = this.getRecommendations(attempt.studentId)[0] || {
+          id: 'rec-default',
+          studentId: attempt.studentId,
+          topicId: attempt.topicId,
+          recommendationType: 'advance_difficulty' as const,
+          title: 'Adaptive Practice',
+          explanation: 'Proceeding with adaptive curriculum.',
+          suggestedActionLabel: 'Continue Practice',
+          suggestedActionRoute: `/solve/${attempt.topicId}`,
+          status: 'active' as const,
+          createdAt: new Date().toISOString()
+        };
+        return {
+          attempt: existing,
+          updatedProgress: currentProgress,
+          newRecommendation: currentRec
+        };
+      }
+    }
+
     const fullAttempt: Attempt = {
       ...attempt,
       id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
@@ -185,7 +220,7 @@ class DatabaseRepository {
     );
 
     const oldMastery = progress ? progress.masteryScore : 0;
-    const newMastery = calculateNewMastery(oldMastery, attempt.isCorrect, attempt.hintUsed);
+    const newMastery = calculateNewMastery(oldMastery, attempt.isCorrect, attempt.hintUsed, attempt.scoreCredit);
 
     const topicAttempts = this.memoryCache.attempts.filter(
       a => a.studentId === attempt.studentId && a.topicId === attempt.topicId

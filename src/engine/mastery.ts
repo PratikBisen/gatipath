@@ -49,11 +49,16 @@ export function getMasteryLabel(score: number): {
 export function calculateNewMastery(
   oldMastery: number,
   isCorrect: boolean,
-  hintUsed: boolean
+  hintUsed: boolean,
+  scoreCreditOverride?: number
 ): number {
   let attemptScore = 0;
   if (isCorrect) {
-    attemptScore = hintUsed ? 70 : 100;
+    if (scoreCreditOverride !== undefined) {
+      attemptScore = scoreCreditOverride;
+    } else {
+      attemptScore = hintUsed ? 70 : 100;
+    }
   } else {
     attemptScore = 0;
   }

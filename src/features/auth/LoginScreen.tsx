@@ -21,12 +21,13 @@ export const LoginScreen: React.FC = () => {
 
   const handleFormLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (!email.trim()) {
       setError('Please enter a valid email address.');
       return;
     }
 
-    const success = login(email, selectedRole);
+    const success = login(email, selectedRole, password);
     if (success) {
       if (selectedRole === 'teacher' || email.includes('teacher')) {
         navigate('/teacher/dashboard');
@@ -34,7 +35,7 @@ export const LoginScreen: React.FC = () => {
         navigate('/student/dashboard');
       }
     } else {
-      setError('Invalid credentials.');
+      setError('Unrecognized credentials. For evaluation, select one-click demo access or use student@gatipath.demo / teacher@gatipath.demo.');
     }
   };
 

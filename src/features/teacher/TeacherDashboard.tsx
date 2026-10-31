@@ -41,12 +41,14 @@ export const TeacherDashboard: React.FC = () => {
     const hasRecentErrors = !!recentFlaggedAttempt;
     const needsAttention = avgMastery < 55 || hasRecentErrors;
     const activeRec = db.getRecommendations(s.id)[0];
+    const hasImproved = sAttempts.length >= 2 && sAttempts[0]?.isCorrect && sAttempts.slice(1).some(a => !a.isCorrect || a.hintUsed);
 
     return {
       student: s,
       avgMastery,
       attemptsCount: sAttempts.length,
       needsAttention,
+      hasImproved,
       recentFlaggedAttempt,
       activeRec,
       topicProgress: sProg
@@ -55,6 +57,7 @@ export const TeacherDashboard: React.FC = () => {
 
   const strugglingStudents = studentSummaries.filter(s => s.needsAttention);
   const readyForNextTopic = studentSummaries.filter(s => s.avgMastery >= 75);
+  const improvedStudents = studentSummaries.filter(s => s.hasImproved);
 
   const topicStats = topics.map(t => {
     const topicProgress = allProgress.filter(p => p.topicId === t.id);
@@ -245,6 +248,54 @@ export const TeacherDashboard: React.FC = () => {
               ))}
             </div>
           </section>
+
+          {/* Scholars Demonstrating Improvement (Delta Growth Tracking) */}
+          {improvedStudents.length > 0 && (
+            <section className="bg-white rounded-xl border border-[#E0D8CC] shadow-xs overflow-hidden">
+              <div className="p-5 border-b border-[#E8E2D8] flex items-center justify-between bg-[#F2F8F4]">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#2D6A4F]" />
+                  <div>
+                    <h3 className="font-editorial text-lg font-bold text-[#1B4332]">
+                      Scholars Demonstrating Concrete Improvement ({improvedStudents.length})
+                    </h3>
+                    <p className="text-xs text-[#5C5549] mt-0.5 font-mono">
+                      Overcame previous errors or successfully utilized progressive guidance.
+                    </p>
+                  </div>
+                </div>
+                <span className="font-mono text-xs px-2.5 py-1 rounded bg-[#EAF2ED] text-[#1B4332] font-bold">
+                  Positive Growth Delta
+                </span>
+              </div>
+
+              <div className="divide-y divide-[#EFEAE2]">
+                {improvedStudents.map(({ student, avgMastery, attemptsCount }) => (
+                  <div key={student.id} className="p-4 hover:bg-[#FAF8F5] transition-colors flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="w-7 h-7 rounded-full bg-[#1B4332] text-white font-editorial font-bold text-xs flex items-center justify-center shrink-0">
+                        {student.displayName.split(' ').map(n => n[0]).join('')}
+                      </span>
+                      <div>
+                        <div className="font-editorial font-bold text-sm text-[#1A1817]">
+                          {student.displayName}
+                        </div>
+                        <span className="text-[11px] text-[#5C5549] font-mono">
+                          Resolved prior difficulty · Current Mastery: <strong className="text-[#1B4332]">{avgMastery}%</strong>
+                        </span>
+                      </div>
+                    </div>
+                    <Link
+                      to={`/teacher/student/${student.id}`}
+                      className="text-xs font-mono font-semibold text-[#1B4332] hover:underline"
+                    >
+                      View Growth Trace &rarr;
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Classroom Concept Landscape */}
           <section className="bg-white rounded-xl border border-[#E0D8CC] shadow-xs p-6 space-y-6">

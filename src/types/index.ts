@@ -44,10 +44,20 @@ export interface Topic {
   estimatedMinutes: number;
   prerequisites: string[]; // Topic IDs that must be >= 70 mastery
   keyConcepts: string[];
+  curriculumStandard?: string; // NCERT / CBSE Learning Outcome code
+  ncertReference?: string; // Chapter & section reference
 }
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 export type QuestionType = 'multiple_choice' | 'fraction_input';
+
+export type ErrorRootCause = 
+  | 'conceptual_misunderstanding' // e.g. adding denominators directly, flipping division incorrectly
+  | 'prerequisite_gap'           // e.g. inability to find common denominator/LCM or form equivalent fraction
+  | 'calculation_slip'           // process is correct, but made an arithmetic slip in numerator calculation
+  | 'unclassified';              // ambiguous wrong answer without specific diagnostic match
+
+export type MisconceptionConfidence = 'suspected' | 'confirmed';
 
 export type MisconceptionCode = 
   | 'denominator_addition_error'          // adding denominators directly e.g. 1/4 + 1/4 = 2/8
@@ -79,6 +89,15 @@ export interface QuestionOption {
   id: string;
   text: string;
   misconceptionCode?: MisconceptionCode;
+  rootCause?: ErrorRootCause;
+  distractorExplanation?: string;
+}
+
+export interface ProgressiveHint {
+  level: 1 | 2 | 3 | 4;
+  stageName: 'Conceptual Reminder' | 'Guided Next Step' | 'Specific Explanation' | 'Worked Solution';
+  text: string;
+  scoreCreditPercent: number; // 90%, 75%, 55%, 40%
 }
 
 export interface Question {
@@ -92,20 +111,27 @@ export interface Question {
   correctAnswer: string;
   explanation: string;
   hint: string;
+  hints?: ProgressiveHint[]; // 4-stage progressive guidance
   misconceptionTag?: MisconceptionCode;
+  rootCauseCategory?: ErrorRootCause;
   prerequisiteTopicId?: string;
+  curriculumStandardCode?: string; // e.g. NCERT-M701
 }
 
 export interface Attempt {
   id: string;
+  idempotencyKey?: string;
   studentId: string;
   questionId: string;
   topicId: string;
   submittedAnswer: string;
   isCorrect: boolean;
   hintUsed: boolean;
-  scoreCredit: number; // 100 for independent correct, 70 for hint correct, 0 for incorrect
+  hintLevelUsed?: number; // 0 (none), 1, 2, 3, or 4
+  scoreCredit: number; // 100 for independent correct, scaled for hints, 0 for incorrect
   detectedMisconception?: MisconceptionCode;
+  rootCause?: ErrorRootCause;
+  misconceptionConfidence?: MisconceptionConfidence;
   timeTakenSeconds: number;
   createdAt: string;
 }
@@ -157,4 +183,27 @@ export interface TeacherIntervention {
   status: InterventionStatus;
   createdAt: string;
   completedAt?: string;
+}
+
+export interface DiagnosticQuestionResult {
+  questionId: string;
+  topicId: string;
+  isCorrect: boolean;
+  rootCause?: ErrorRootCause;
+  detectedMisconception?: MisconceptionCode;
+}
+
+export interface DiagnosticSessionResult {
+  id: string;
+  studentId: string;
+  totalQuestionsAsked: number;
+  completedAt: string;
+  recommendedStartingTopicId: string;
+  estimatedMastery: Record<string, number>; // topicId -> baseline mastery
+  detectedGaps: {
+    topicId: string;
+    rootCause: ErrorRootCause;
+    description: string;
+  }[];
+  earlyStopReason: string;
 }

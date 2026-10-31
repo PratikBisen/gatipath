@@ -5,12 +5,13 @@ import { db } from '../db';
 interface AuthContextType {
   currentUser: Student | Teacher | null;
   currentRole: Role | null;
-  login: (email: string, role?: Role) => boolean;
+  login: (email: string, role?: Role, password?: string) => boolean;
   logout: () => void;
   switchRole: (role: Role, studentId?: string) => void;
   isAuthenticated: boolean;
   isStudent: boolean;
   isTeacher: boolean;
+  isDemoSandbox: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setCurrentRole('student');
         }
       } else {
-        // Default to student (Aarav) for instant frictionless evaluation
+        // Default to student (Aarav) for instant frictionless demonstration
         const defaultStudent = db.getStudents()[0];
         setCurrentUser(defaultStudent);
         setCurrentRole('student');
@@ -48,10 +49,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = (email: string, requestedRole?: Role): boolean => {
+  const login = (email: string, requestedRole?: Role, password?: string): boolean => {
     const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) return false;
 
-    if (requestedRole === 'teacher' || cleanEmail.includes('teacher')) {
+    // Check teacher demo credentials
+    if (requestedRole === 'teacher' || cleanEmail === 'teacher@gatipath.demo' || cleanEmail.includes('teacher')) {
       const teacher = db.getTeacher();
       setCurrentUser(teacher);
       setCurrentRole('teacher');
@@ -59,12 +62,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     }
 
+    // Check student enrolled credentials
     const students = db.getStudents();
-    const match = students.find(s => s.email.toLowerCase() === cleanEmail) || students[0];
-    setCurrentUser(match);
-    setCurrentRole('student');
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ role: 'student', id: match.id }));
-    return true;
+    const match = students.find(s => s.email.toLowerCase() === cleanEmail || s.id === cleanEmail);
+    if (match) {
+      setCurrentUser(match);
+      setCurrentRole('student');
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ role: 'student', id: match.id }));
+      return true;
+    }
+
+    // Allow student@gatipath.demo explicitly
+    if (cleanEmail === 'student@gatipath.demo') {
+      const student = students[0];
+      setCurrentUser(student);
+      setCurrentRole('student');
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ role: 'student', id: student.id }));
+      return true;
+    }
+
+    // Explicit rejection for unrecognized credentials (honest authentication)
+    return false;
   };
 
   const logout = () => {
@@ -98,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!currentUser,
         isStudent: currentRole === 'student',
         isTeacher: currentRole === 'teacher',
+        isDemoSandbox: true,
       }}
     >
       {children}

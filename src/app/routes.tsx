@@ -8,6 +8,7 @@ import { LoginScreen } from '../features/auth/LoginScreen';
 import { StudentDashboard } from '../features/student/StudentDashboard';
 import { LearningPath } from '../features/student/LearningPath';
 import { AssessmentsList } from '../features/student/AssessmentsList';
+import { DiagnosticScreen } from '../features/assessments/DiagnosticScreen';
 import { LearnScreen } from '../features/learning/LearnScreen';
 import { SolveScreen } from '../features/learning/SolveScreen';
 import { TestScreen } from '../features/assessments/TestScreen';
@@ -16,6 +17,20 @@ import { StudentRoster } from '../features/teacher/StudentRoster';
 import { StudentDetail } from '../features/teacher/StudentDetail';
 import { ClassInsights } from '../features/teacher/ClassInsights';
 import { InterventionsList } from '../features/teacher/InterventionsList';
+import { EvaluationReport } from '../features/developer/EvaluationReport';
+
+const TeacherGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isTeacher } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isTeacher) return <Navigate to="/student/dashboard" replace />;
+  return <>{children}</>;
+};
+
+const StudentGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
 
 export const AppRoutes: React.FC = () => {
   const { isAuthenticated, isTeacher, isStudent } = useAuth();
@@ -65,6 +80,14 @@ export const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/student/diagnostic"
+        element={
+          <AppLayout>
+            <DiagnosticScreen />
+          </AppLayout>
+        }
+      />
+      <Route
         path="/learn/:topicId"
         element={
           <AppLayout>
@@ -89,44 +112,64 @@ export const AppRoutes: React.FC = () => {
         }
       />
 
-      {/* Teacher Screens */}
+      {/* Teacher Screens (Role Protected) */}
       <Route
         path="/teacher/dashboard"
         element={
-          <AppLayout>
-            <TeacherDashboard />
-          </AppLayout>
+          <TeacherGuard>
+            <AppLayout>
+              <TeacherDashboard />
+            </AppLayout>
+          </TeacherGuard>
         }
       />
       <Route
         path="/teacher/students"
         element={
-          <AppLayout>
-            <StudentRoster />
-          </AppLayout>
+          <TeacherGuard>
+            <AppLayout>
+              <StudentRoster />
+            </AppLayout>
+          </TeacherGuard>
         }
       />
       <Route
         path="/teacher/student/:studentId"
         element={
-          <AppLayout>
-            <StudentDetail />
-          </AppLayout>
+          <TeacherGuard>
+            <AppLayout>
+              <StudentDetail />
+            </AppLayout>
+          </TeacherGuard>
         }
       />
       <Route
         path="/teacher/insights"
         element={
-          <AppLayout>
-            <ClassInsights />
-          </AppLayout>
+          <TeacherGuard>
+            <AppLayout>
+              <ClassInsights />
+            </AppLayout>
+          </TeacherGuard>
         }
       />
       <Route
         path="/teacher/interventions"
         element={
+          <TeacherGuard>
+            <AppLayout>
+              <InterventionsList />
+            </AppLayout>
+          </TeacherGuard>
+        }
+      />
+
+      {/* Developer & Engine Evaluation Report */}
+      <Route
+        path="/evaluation"
+        element={
           <AppLayout>
-            <InterventionsList />
+            <EvaluationReport />
           </AppLayout>
         }
       />

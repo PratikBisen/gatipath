@@ -74,6 +74,16 @@ export const StudentDashboard: React.FC = () => {
           <p className="text-sm sm:text-base text-[#5C5549] mt-2 max-w-2xl leading-relaxed">
             Welcome to your fractions study desk. GatiPath adapts to how you solve problems, highlighting concepts to revisit before moving forward.
           </p>
+          <div className="mt-3 flex items-center gap-3">
+            <Link
+              to="/student/diagnostic"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF1E4] border border-[#E8D4BE] text-xs font-mono font-semibold text-[#8C6239] hover:bg-[#F4E3CD] transition-colors"
+            >
+              <Compass className="w-3.5 h-3.5 text-[#C57D36]" />
+              <span>Smart Knowledge Placement Diagnostic</span>
+              <ArrowRight className="w-3 h-3 ml-0.5" />
+            </Link>
+          </div>
         </div>
 
         {/* Milestone Snapshot Bar */}
@@ -352,6 +362,29 @@ export const StudentDashboard: React.FC = () => {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Constructive Growth & Consistency Milestones */}
+          <div className="bg-[#FAF8F5] rounded-xl border border-[#E0D8CC] p-4 space-y-2.5">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#1B4332] font-semibold">
+              <Sparkles className="w-4 h-4 text-[#C57D36]" />
+              <span>Growth Milestones & Consistency</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-[#5C5549]">
+              <div className="p-2 rounded bg-white border border-[#EAE3D6] space-y-0.5">
+                <span className="text-[#8C8377] block text-[10px]">Study Cadence</span>
+                <span className="font-bold text-[#1B4332]">3-Day Consistency</span>
+              </div>
+              <div className="p-2 rounded bg-white border border-[#EAE3D6] space-y-0.5">
+                <span className="text-[#8C8377] block text-[10px]">Independent Solves</span>
+                <span className="font-bold text-[#1A1817]">
+                  {recentAttempts.filter(a => a.isCorrect && !a.hintUsed).length} Solved
+                </span>
+              </div>
+            </div>
+            <p className="text-[11px] text-[#7A7265] italic">
+              "Pacing yourself daily builds stronger mathematical intuition than rushing."
+            </p>
           </div>
 
           {/* Quick Study Tip */}
