@@ -7,36 +7,21 @@
 - **Routing Strategy**: HashRouter for 100% static host compatibility and reliable reload support
 - **Build Output**: `dist/` with relative base asset paths (`./`)
 
-## 2. Demonstration Access & Accounts
-| Persona | Email | Purpose |
+## 2. Demonstration Access & Personas
+| Persona | Email | Purpose & Path |
 |---|---|---|
-| **Demo Student (Aarav Sharma)** | `student@gatipath.demo` | Experience student learning journey: Learn -> Solve -> Misconception Guidance -> Assessment |
-| **Demo Teacher (Sunita Verma)** | `teacher@gatipath.demo` | Experience teacher command center: Class roster, student detail, diagnostics, interventions |
+| **Demo Student (Aarav Sharma)** | `student@gatipath.demo` | Experience student learning journey: Study Desk -> Focus Module -> Misconception Guidance -> Assessment |
+| **Demo Teacher (Sunita Verma)** | `teacher@gatipath.demo` | Experience teacher command center: Casebook Dossier, Student Ledger, Diagnostic Analytics, Interventions |
 
-*Note: For instant evaluation, the top navbar includes a one-click persona switcher and a "Reset Demo Data" button.*
+*Note: The top masthead includes a 1-click persona switcher and a "Reset Demo" button.*
 
-## 3. Build & Local Development
-```bash
-# Clone the repository
-git clone https://github.com/PratikBisen/gatipath.git
-cd gatipath
+## 3. Verified Build & Production Metrics
+- **Production JS**: `assets/index-BqmKS6OS.js` (441 kB raw, 122 kB gzipped)
+- **Production CSS**: `assets/index-BxJfmQny.css` (50.6 kB raw, 9.4 kB gzipped)
+- **HTTP Status**: Verified `HTTP/2 200 OK` on live GitHub Pages CDN.
+- **Automated Tests**: 8 of 8 Vitest unit tests passing.
 
-# Install dependencies
-npm install
-
-# Run automated tests
-npm test
-
-# Run local development server
-npm run dev
-
-# Build for production
-npm run build
-```
-
-## 4. Verification Check
-- Live HTTP/2 status: `200 OK`
-- Assets status: `HTTP 200` for JS (`assets/index-cWGmJsVe.js`) and CSS (`assets/index-Dy5qJzLm.css`)
-- Production Bundle: `453 kB` JS (125 kB gzipped), `48.5 kB` CSS (8.6 kB gzipped)
-- Vitest automated test suite: 8 of 8 unit tests passing
-- End-to-end user workflows verified across both desktop and mobile viewports.
+## 4. Visual Quality Inspection & Screenshots
+Real browser screenshots captured at both Desktop (1440 × 900) and Mobile (390 × 844) resolutions are stored under:
+- `docs/screenshots/before/`: Initial prototype state
+- `docs/screenshots/after/`: Academic Atelier redesigned state
