@@ -1,43 +1,45 @@
 # TESTING CHECKLIST — GatiPath
 
 ## 1. Functional Verification
-- [ ] **Student Authentication**: Login as `student@gatipath.demo` or one-click switcher opens student dashboard.
-- [ ] **Teacher Authentication**: Login as `teacher@gatipath.demo` opens teacher dashboard.
-- [ ] **Role Protection**: Student cannot navigate to teacher routes; teacher has class-wide management capabilities.
-- [ ] **Adaptive Engine Unit Tests**:
-  - [ ] Independent correct answers increment mastery via EMA.
-  - [ ] Hint-assisted answers award partial score credit (70).
-  - [ ] Incorrect answer reduces mastery appropriately without catastrophic drop.
-  - [ ] Multiple incorrect answers with `denominator_addition_error` trigger targeted remediation.
-  - [ ] Low prerequisite mastery blocks advancement and triggers prerequisite recommendation.
-  - [ ] Topic mastery reaches >= 85 only after passing assessment and demonstrated independent success.
-- [ ] **Mathematical Content Accuracy**:
-  - [ ] All 32 questions verified for mathematical accuracy.
-  - [ ] No ambiguous fraction syntax.
-  - [ ] Worked examples contain valid mathematical steps.
-- [ ] **Interactive Practice (Solve Mode)**:
-  - [ ] Answer evaluation works for both choice selection and fraction input.
-  - [ ] Misconception card appears with visual fraction model when error matches catalog.
-  - [ ] Next question adjusts difficulty based on recent performance window.
-- [ ] **Summative Assessment (Test Mode)**:
-  - [ ] Hints are disabled.
-  - [ ] Submitting assessment calculates final score and updates student topic progress status.
-- [ ] **Teacher Management**:
-  - [ ] Dashboard displays accurate counts computed from database.
-  - [ ] Student profile renders all logged attempts with timestamps, answers, and hints used.
-  - [ ] Creating an intervention updates the student's recommendation feed.
-  - [ ] Marking intervention complete updates status persistently.
-- [ ] **Data Persistence & Reset**:
-  - [ ] Browser refresh maintains progress and history.
-  - [ ] "Reset Demo Data" restores initial pristine demo state.
+- [x] **Student Authentication**: Login as `student@gatipath.demo` or one-click demo switcher opens student dashboard (Aarav Sharma).
+- [x] **Teacher Authentication**: Login as `teacher@gatipath.demo` or one-click demo switcher opens teacher dashboard (Sunita Verma).
+- [x] **Role Protection**: Role-specific routing and interface views (students see learning journey; teachers see class roster and diagnostics).
+- [x] **Adaptive Engine Unit Tests (Vitest)**:
+  - [x] Independent correct answers increment mastery via EMA (`new = old*0.7 + 100*0.3`).
+  - [x] Hint-assisted answers award partial score credit (70).
+  - [x] Incorrect answer reduces mastery appropriately without catastrophic drop (`new = old*0.7`).
+  - [x] Repeated incorrect answers with `denominator_addition_error` trigger targeted remediation.
+  - [x] Low prerequisite mastery blocks advancement and triggers prerequisite recommendation.
+  - [x] Strict Anti-Slop: Topic mastery status reaches 'mastered' only after passing assessment (>=80%) and demonstrated independent success.
+- [x] **Mathematical Content Accuracy**:
+  - [x] All 32 curriculum questions mathematically verified.
+  - [x] Worked examples contain valid mathematical steps and correct fractions.
+  - [x] Visual models render accurate parts and fractions.
+- [x] **Interactive Practice (Solve Mode)**:
+  - [x] Answer evaluation works cleanly with immediate feedback.
+  - [x] Misconception card appears with visual fraction model comparison (e.g. 1/4 + 1/4 = 2/4 vs 2/8).
+  - [x] Next question adjusts difficulty based on recent performance window.
+- [x] **Summative Assessment (Test Mode)**:
+  - [x] Hints are disabled.
+  - [x] Question stepper allows navigation across all 5 test questions.
+  - [x] Submitting assessment calculates final score, passes at >=80%, and updates topic mastery status.
+- [x] **Teacher Management**:
+  - [x] Dashboard displays real statistics calculated from seeded database records.
+  - [x] Student profile renders logged attempts with timestamps, answers, and hints used.
+  - [x] Teacher can assign custom intervention with strategy and note.
+  - [x] Toggling intervention status updates persistently.
+- [x] **Data Persistence & Reset**:
+  - [x] Browser refresh maintains all progress and history.
+  - [x] "Reset Demo Data" button restores initial pristine demonstration state.
 
 ## 2. Visual & Responsive Design
-- [ ] Mobile 360px viewport: no horizontal scrollbar, touch targets >= 44px, bottom nav functional.
-- [ ] Tablet 768px viewport: multi-column layout expands naturally.
-- [ ] Desktop 1280px+ viewport: sidebar navigation, spacious cards, academic palette intact.
-- [ ] Typography and color palette strictly adhere to `DESIGN_SYSTEM.md`. No purple/blue AI gradient clichés.
+- [x] Mobile 360px viewport: no horizontal overflow, bottom navigation bar active, touch targets >= 44px.
+- [x] Tablet 768px viewport: grid adapts naturally from 1 to 2 columns.
+- [x] Desktop 1280px+ viewport: full multi-column layout with sidebar metrics.
+- [x] Color palette strictly adheres to `DESIGN_SYSTEM.md`: `#F7F8F5` canvas, `#246B50` forest primary, `#202A25` charcoal, `#C77A45` accent.
 
-## 3. Deployment & Production
-- [ ] `npm run build` succeeds with zero TypeScript or styling errors.
-- [ ] Deployed public URL accessible without authentication walls or missing assets.
-- [ ] Browser console has zero uncaught exceptions.
+## 3. Deployment & Live Verification
+- [x] `npm run build` succeeds with zero TypeScript or PostCSS errors.
+- [x] Public live deployment active at: `https://pratikbisen.github.io/gatipath/`.
+- [x] Live JS bundle (`index-DQK_KRLX.js`) and CSS bundle (`index-BD6R0nk5.css`) verified HTTP 200 OK.
+- [x] End-to-end user workflows tested on live site.

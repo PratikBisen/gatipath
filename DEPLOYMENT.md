@@ -1,27 +1,40 @@
 # DEPLOYMENT GUIDE — GatiPath
 
-## 1. Hosting Architecture
-- **Application Type**: Static Single Page Application (SPA) with client-side relational persistence and optional Supabase backend synchronization.
-- **Frontend Host**: Vercel / GitHub Pages / Netlify.
-- **Node Version**: v24.22.2 (LTS compatible).
-- **Package Manager**: npm 11.19.1.
+## 1. Live Deployment Details
+- **Live Public URL**: [https://pratikbisen.github.io/gatipath/](https://pratikbisen.github.io/gatipath/)
+- **GitHub Repository**: [https://github.com/PratikBisen/gatipath](https://github.com/PratikBisen/gatipath)
+- **Deployment Platform**: GitHub Pages (Branch: `gh-pages`)
+- **Routing Strategy**: HashRouter for 100% static host compatibility and reliable reload support
+- **Build Output**: `dist/` with relative base asset paths (`./`)
 
-## 2. Environment Variables
-- `VITE_APP_TITLE`: GatiPath
-- `VITE_SUPABASE_URL`: (Optional) Remote Supabase project URL
-- `VITE_SUPABASE_ANON_KEY`: (Optional) Public client anonymous key
+## 2. Demonstration Access & Accounts
+| Persona | Email | Purpose |
+|---|---|---|
+| **Demo Student (Aarav Sharma)** | `student@gatipath.demo` | Experience student learning journey: Learn -> Solve -> Misconception Guidance -> Assessment |
+| **Demo Teacher (Sunita Verma)** | `teacher@gatipath.demo` | Experience teacher command center: Class roster, student detail, diagnostics, interventions |
 
-## 3. Build & Deployment Commands
-- **Install dependencies**: `npm install`
-- **Build**: `npm run build` (outputs to `dist/`)
-- **Preview**: `npm run preview`
-- **Deploy to Vercel**: `npx -y vercel --prod`
-- **Deploy to GitHub Pages**: `npm run deploy` via `gh-pages` or GitHub Actions
+*Note: For instant evaluation, the top navbar includes a one-click persona switcher and a "Reset Demo Data" button.*
 
-## 4. Verification Steps Post-Deployment
-1. Open the live URL.
-2. Sign in as Demo Student (`student@gatipath.demo`).
-3. Complete practice session in "Addition & Subtraction" and confirm adaptive engine responses.
-4. Sign in as Demo Teacher (`teacher@gatipath.demo`).
-5. Open student profile for "Aarav Sharma" and verify logged attempts and interventions.
-6. Verify responsive display on mobile viewport.
+## 3. Build & Local Development
+```bash
+# Clone the repository
+git clone https://github.com/PratikBisen/gatipath.git
+cd gatipath
+
+# Install dependencies
+npm install
+
+# Run automated tests
+npm test
+
+# Run local development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+## 4. Verification Check
+- Live HTTP/2 status: `200 OK`
+- Assets status: `HTTP 200` for JS (`assets/index-DQK_KRLX.js`) and CSS (`assets/index-BD6R0nk5.css`)
+- End-to-end user workflows verified.
